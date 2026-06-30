@@ -12,7 +12,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import android.app.AlertDialog
-import android.os.Build
 import com.circuitbreak.app.data.ItemStore
 
 class MainActivity : ComponentActivity() {

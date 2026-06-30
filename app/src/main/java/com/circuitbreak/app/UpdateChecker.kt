@@ -83,7 +83,7 @@ object UpdateChecker {
             override fun onReceive(ctx: Context, intent: Intent) {
                 val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                 if (id != downloadId) return
-                ctx.unregisterReceiver(this)
+                ctx.applicationContext.unregisterReceiver(this)
 
                 val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
                 if (!file.exists()) return
