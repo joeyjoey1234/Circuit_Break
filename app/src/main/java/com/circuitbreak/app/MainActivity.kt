@@ -11,6 +11,8 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import android.app.AlertDialog
+import android.os.Build
 import com.circuitbreak.app.data.ItemStore
 
 class MainActivity : ComponentActivity() {
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
                     pageLoaded = true
                     pushItems()
                     pushSoundPref()
+                    checkForUpdate()
                 }
             }
             webChromeClient = WebChromeClient()
@@ -78,6 +81,24 @@ class MainActivity : ComponentActivity() {
             pushItems()
             pushSoundPref()
         }
+
+    private fun checkForUpdate() {
+        val currentVersion = "v" + (packageManager.getPackageInfo(packageName, 0).versionName ?: "0")
+        UpdateChecker.check { release ->
+            if (release != null && UpdateChecker.isNewer(currentVersion, release.tagName)) {
+                runOnUiThread {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setTitle("Update Available")
+                        .setMessage("${release.tagName} is available (current: $currentVersion).\nDownload and install?")
+                        .setPositiveButton("Download") { _, _ ->
+                            UpdateChecker.downloadAndInstall(this@MainActivity, release.downloadUrl, release.fileName)
+                        }
+                        .setNegativeButton("Later", null)
+                        .show()
+                }
+            }
+        }
+    }
 
     inner class CircuitBridge {
         @JavascriptInterface

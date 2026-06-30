@@ -73,7 +73,7 @@ object ItemStore {
 
     fun addCustom(context: Context, type: String, item: ActivityItem) {
         val items = getCustom(context, type).toMutableList()
-        items.add(item)
+        items.add(sanitize(item))
         saveCustom(context, type, items)
     }
 
@@ -81,7 +81,7 @@ object ItemStore {
         val items = getCustom(context, type).toMutableList()
         val idx = items.indexOfFirst { it.uid() == oldUid }
         if (idx >= 0) {
-            items[idx] = newItem
+            items[idx] = sanitize(newItem)
             saveCustom(context, type, items)
         }
     }
@@ -102,13 +102,31 @@ object ItemStore {
     fun getMergedItems(context: Context, defaults: List<ActivityItem>, type: String): List<ActivityItem> {
         val removed = getRemoved(context)
         val custom = getCustom(context, type)
-        val filtered = defaults.filter { !removed.contains(it.uid()) }
+        val sanitizedDefaults = defaults.map { sanitize(it) }
+        val filtered = sanitizedDefaults.filter { !removed.contains(it.uid()) }
         return filtered + custom
     }
 
     fun allToJson(physical: List<ActivityItem>, cognitive: List<ActivityItem>): String {
         return gson.toJson(mapOf("physical" to physical, "cognitive" to cognitive))
     }
+
+    // ── unicode sanitization ──────────────────────────
+    private fun sanitize(item: ActivityItem): ActivityItem {
+        return item.copy(
+            a = clean(item.a),
+            b = clean(item.b),
+            d = clean(item.d),
+            cat = clean(item.cat)
+        )
+    }
+
+    private fun clean(s: String): String = s
+        .replace("\u2011", "-")   // non-breaking hyphen
+        .replace("\u2192", ">")   // right arrow
+        .replace("\u2014", "-")   // em dash
+        .replace("\u2013", "-")   // en dash
+        .replace("\u00B7", ".")   // middle dot
 
     // ── sound ─────────────────────────────────────────
     fun isSoundEnabled(context: Context): Boolean {
