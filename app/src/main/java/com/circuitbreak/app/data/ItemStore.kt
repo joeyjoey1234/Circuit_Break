@@ -19,19 +19,23 @@ object ItemStore {
 
     fun loadDefaults(context: Context): Pair<List<ActivityItem>, List<ActivityItem>> {
         cachedDefaults?.let { return it }
-        val json = context.assets.open("defaults.json").bufferedReader().readText()
-        val root = gson.fromJson(json, Map::class.java)
-        val phys = gson.fromJson<List<ActivityItem>>(
-            gson.toJson(root["physical"]),
-            object : TypeToken<List<ActivityItem>>() {}.type
-        )
-        val cog = gson.fromJson<List<ActivityItem>>(
-            gson.toJson(root["cognitive"]),
-            object : TypeToken<List<ActivityItem>>() {}.type
-        )
-        val pair = Pair(phys, cog)
-        cachedDefaults = pair
-        return pair
+        return try {
+            val json = context.assets.open("defaults.json").bufferedReader().readText()
+            val root = gson.fromJson(json, Map::class.java)
+            val phys = gson.fromJson<List<ActivityItem>>(
+                gson.toJson(root["physical"]),
+                object : TypeToken<List<ActivityItem>>() {}.type
+            )
+            val cog = gson.fromJson<List<ActivityItem>>(
+                gson.toJson(root["cognitive"]),
+                object : TypeToken<List<ActivityItem>>() {}.type
+            )
+            val pair = Pair(phys, cog)
+            cachedDefaults = pair
+            pair
+        } catch (e: Exception) {
+            Pair(emptyList(), emptyList())
+        }
     }
 
     // ── removed items ─────────────────────────────────
@@ -57,10 +61,14 @@ object ItemStore {
 
     // ── custom items ──────────────────────────────────
     fun getCustom(context: Context, type: String): List<ActivityItem> {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val key = if (type == "physical") KEY_CUSTOM_PHYSICAL else KEY_CUSTOM_COGNITIVE
-        val json = prefs.getString(key, "[]") ?: "[]"
-        return gson.fromJson(json, object : TypeToken<List<ActivityItem>>() {}.type)
+        return try {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val key = if (type == "physical") KEY_CUSTOM_PHYSICAL else KEY_CUSTOM_COGNITIVE
+            val json = prefs.getString(key, "[]") ?: "[]"
+            gson.fromJson(json, object : TypeToken<List<ActivityItem>>() {}.type)
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     fun addCustom(context: Context, type: String, item: ActivityItem) {

@@ -3,6 +3,7 @@ package com.circuitbreak.app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -58,14 +59,10 @@ class MainActivity : ComponentActivity() {
         val phys = ItemStore.getMergedItems(this, defPhys, "physical")
         val cog = ItemStore.getMergedItems(this, defCog, "cognitive")
         val json = ItemStore.allToJson(phys, cog)
-        val safeJson = json
-            .replace("\\", "\\\\")
-            .replace("'", "\\'")
-            .replace("\n", "\\n")
-            .replace("\r", "")
+        val b64 = Base64.encodeToString(json.toByteArray(), Base64.NO_WRAP)
 
         webView.post {
-            webView.evaluateJavascript("if(window.loadItems) window.loadItems('$safeJson')", null)
+            webView.evaluateJavascript("if(window.loadItems) window.loadItems(atob('$b64'))", null)
         }
     }
 
