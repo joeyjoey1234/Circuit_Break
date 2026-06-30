@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spin — Craving Killer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .app {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    position: relative;
+  }
+  .settings-gear {
+    position: absolute;
+    right: 0;
+    top: 0;
+    font-size: 22px;
+    color: #555;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .settings-gear:active { color: #4a4aff; }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .header .sub {
+    font-size: 13px;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  /* Mode Selector */
+  .modes {
+    display: flex;
+    gap: 8px;
+  }
+  .mode-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+    background: #141414;
+    color: #888;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .mode-btn.active {
+    background: #1a1a2e;
+    border-color: #4a4aff;
+    color: #4a4aff;
+    box-shadow: 0 0 12px rgba(74,74,255,0.12);
+  }
+  .mode-btn .emoji { font-size: 18px; display: block; margin-bottom: 1px; }
+
+  /* Card */
+  .card-container {
+    position: relative;
+    height: 210px;
+    perspective: 600px;
+  }
+  .card {
+    width: 100%;
+    height: 100%;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.3s;
+    position: absolute;
+    backface-visibility: hidden;
+    padding: 16px;
+  }
+  .card .activity-line {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ddd;
+    text-align: center;
+    line-height: 1.4;
+    padding: 0 8px;
+  }
+  .card .activity-line.highlight {
+    font-size: 19px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .card.spinning {
+    animation: cardFlip 0.5s cubic-bezier(0.16,1,0.3,1);
+  }
+  @keyframes cardFlip {
+    0%   { transform: rotateX(0deg) scale(1); }
+    40%  { transform: rotateX(90deg) scale(0.94); }
+    60%  { transform: rotateX(90deg) scale(0.94); }
+    100% { transform: rotateX(0deg) scale(1); }
+  }
+  .card .category-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #1a1a1a;
+    color: #666;
+  }
+  .card .category-tag.physical { color: #4a4aff; border: 1px solid #4a4aff33; }
+  .card .category-tag.cognitive { color: #22c55e; border: 1px solid #22c55e33; }
+  .card .idle-text {
+    font-size: 15px;
+    color: #333;
+  }
+  .card .secondary {
+    font-size: 14px;
+    color: #888;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .card.revealed { border-color: #2a2a2a; background: #181818; }
+
+  .pulse { animation: pulse 0.6s ease-out; }
+  @keyframes pulse {
+    0%   { transform: scale(0.92); opacity: 0; }
+    60%  { transform: scale(1.02); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* Spin Button */
+  .spin-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: #4a4aff;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .spin-btn:active {
+    background: #3a3aee;
+    transform: scale(0.98);
+  }
+  .spin-btn:disabled {
+    background: #1a1a1a;
+    color: #444;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Counter + streak */
+  .stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    font-size: 13px;
+    color: #555;
+  }
+  .stats .count {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+  .stats .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #555;
+  }
+  .stats .col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  /* History */
+  .history-section { text-align: center; }
+  .history-section .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+    margin-bottom: 6px;
+  }
+  .history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    min-height: 20px;
+  }
+  .history .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #1f1f1f;
+  }
+  .history .dot.p { background: #4a4aff; }
+  .history .dot.c { background: #22c55e; }
+
+  .reset {
+    text-align: center;
+    font-size: 11px;
+    color: #333;
+    cursor: pointer;
+    margin-top: -8px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Circuit Break</h1>
+    <div class="sub">spin instead of snack</div>
+    <span class="settings-gear" id="settingsBtn" title="edit items">⚙</span>
+  </div>
+
+  <div class="modes">
+    <button class="mode-btn active" data-mode="any">
+      <span class="emoji">🎲</span> Anything
+    </button>
+    <button class="mode-btn" data-mode="physical">
+      <span class="emoji">💪</span> Physical
+    </button>
+    <button class="mode-btn" data-mode="cognitive">
+      <span class="emoji">🧠</span> Cognitive
+    </button>
+  </div>
+
+  <div class="card-container">
+    <div class="card" id="card">
+      <span class="idle-text">spacebar or tap ↓</span>
+    </div>
+  </div>
+
+  <button class="spin-btn" id="spinBtn">SPIN</button>
+
+  <div class="stats">
+    <div class="col">
+      <span class="count" id="totalCount">0</span>
+      <span class="label">today</span>
+    </div>
+    <div class="col">
+      <span class="count" id="streakCount">0</span>
+      <span class="label">day streak</span>
+    </div>
+  </div>
+
+  <div class="history-section">
+    <div class="section-label">session history</div>
+    <div class="history" id="history"></div>
+  </div>
+  <div class="reset" id="resetBtn">reset today</div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────
+// Physical: push exercises are PAIRED with a pull. Neutral/leg/core stand alone.
+let PHYSICAL = [
+  { a: "Push‑ups x10", b: "Band pull‑aparts x15", d: "chest → rear delts", cat: "push+pull" },
+  { a: "Chair dips x12", b: "Band face pulls x15", d: "triceps → rotator cuff", cat: "push+pull" },
+  { a: "Burpees x8", b: "Dead hang 30 sec", d: "full send → back decompress", cat: "push+pull" },
+  { a: "Shadowbox 45 sec", b: "Band face pulls x15", d: "punches → shoulder health", cat: "push+pull" },
+  { a: "Tempo push‑ups x5 (5s down)", b: "Scap pull‑ups x8", d: "chest control → back activation", cat: "push+pull" },
+  { a: "Punching bag flurry 30 sec", b: "Band pull‑aparts x15", d: "bag work → rear delts", cat: "push+pull" },
+  // standalone / neutral
+  { a: "Air squats x15", b: "", d: "legs", cat: "legs" },
+  { a: "Goblet squat x8", b: "", d: "legs (hold a plate)", cat: "legs" },
+  { a: "Lunges x10 (5/side)", b: "", d: "legs + balance", cat: "legs" },
+  { a: "Back extensions x12", b: "", d: "posterior chain", cat: "posterior" },
+  { a: "Bear crawl 30 ft + back", b: "", d: "full body + coordination", cat: "fullbody" },
+  { a: "Barbell row x8", b: "from rack — real pull", d: "back strength", cat: "pull" },
+  { a: "Farmers carry 30 sec", b: "", d: "grip + core (carry bag)", cat: "fullbody" },
+  { a: "Weight vest stair laps 45 sec", b: "", d: "loaded cardio (vest)", cat: "fullbody" },
+  { a: "Heavy bag body shots 30 sec", b: "hooks to body, liver shots", d: "bag work — low joint impact", cat: "fullbody" },
+  { a: "Band pull‑aparts x20", b: "", d: "posture / rear delts", cat: "pull" },
+  { a: "Scap pull‑up + knee raise x5", b: "pull‑up bar — control both ends", d: "back + core combo", cat: "pull" },
+  { a: "High knees 30 sec", b: "", d: "cardio spike", cat: "cardio" },
+  { a: "Mountain climbers x20", b: "", d: "core + cardio", cat: "core" },
+  { a: "Quick feet drill 30 sec", b: "fast feet in place", d: "foot speed + cardio", cat: "cardio" },
+  // ── new additions ──
+  { a: "Plate halo x8/side", b: "circle plate around head — shoulder mobility", d: "mobility + novelty", cat: "mobility" },
+  { a: "Single‑leg RDL x5/side", b: "no load — balance + posterior chain", d: "skill progression: wall → freestanding → eyes closed", cat: "posterior" },
+  { a: "L‑sit tuck hold 15 sec", b: "dip bars or two chairs — total body tension", d: "skill: tuck → one‑leg → full L‑sit", cat: "core" },
+  { a: "Plate chest pass x10 + band pull‑aparts x15", b: "throw plate at wall, catch rebound — explosive + posture", d: "push+pull pair", cat: "push+pull" },
+  { a: "Band‑resisted push‑up x8 + band face pulls x15", b: "band across back — novel resistance curve", d: "push+pull pair", cat: "push+pull" },
+  { a: "Jumping swap lunges x10", b: "swap mid‑air — rhythm + cardio", d: "legs + coordination", cat: "legs" },
+  { a: "Trap bar shrug x10", b: "quick, no setup — grip + traps", d: "power + pull", cat: "pull" },
+  { a: "Cold water face splash 30 sec", b: "sink — dive reflex → instant norepinephrine spike", d: "craving killer", cat: "reset" },
+  { a: "Shadowbox to metronome 60 sec", b: "set metronome app to 80–120 bpm — punch on the beat", d: "rhythm + coordination + cardio", cat: "fullbody" },
+];
+
+let COGNITIVE = [
+  { a: "Sudoku puzzle", b: "sudoku.com — do 1 puzzle", d: "3 min · logic + speed", cat: "logic" },
+  { a: "Memorize 1 line of poetry", b: "poetryfoundation.org — read, then recall", d: "3 min · memory + culture", cat: "memory" },
+  { a: "Speed math vs high score", b: "arithmetic.zetamac.com — beat your last score", d: "2 min · logic + competition", cat: "logic" },
+  { a: "Rap 4 bars to a beat", b: "YouTube 'type beat' + random word generator", d: "4 min · rhythm + vocab + flow", cat: "creative" },
+  { a: "Read 1 paragraph + recall test", b: "grab any book — read 1 para, look away, recall key points", d: "3 min · active reading + memory", cat: "memory" },
+  { a: "20 mental math problems", b: "arithmetic.zetamac.com — add/sub/mult", d: "2 min · speed + logic", cat: "logic" },
+  { a: "Typing speed test", b: "monkeytype.com — 30 words", d: "1 min · speed + WPM tracking", cat: "speed" },
+  { a: "Name 10 things in a category", b: "e.g. countries, bands, films — set a timer", d: "2 min · speed retrieval", cat: "speed" },
+  { a: "Duolingo 1 lesson", b: "duolingo.com or app — any language", d: "3 min · vocab + streak", cat: "learning" },
+  { a: "Learn 3 new words + definitions", b: "vocabulary.com — random words, then sentence each", d: "3 min · vocab depth", cat: "learning" },
+  { a: "Freestyle rap 30 sec", b: "random word as prompt — just go, no stopping", d: "2 min · flow + creativity", cat: "creative" },
+  { a: "Anagram speed round", b: "wordplays.com/anagrams — unscramble 5 words vs timer", d: "3 min · word retrieval + speed", cat: "speed" },
+  { a: "Listen to 1 verse + rap it back", b: "play any rap song — pause after 1 verse, match cadence", d: "4 min · ear training for rap", cat: "creative" },
+  { a: "Learn 1 logical fallacy + spot it today", b: "yourlogicalfallacyis.com — learn 1, watch for it all day", d: "2 min · critical thinking", cat: "logic" },
+  { a: "Dual n‑back", b: "dualn-back.com or app — working memory training", d: "3 min · skill: aim for higher N‑level", cat: "memory" },
+  { a: "Memorize 3 digits of pi", b: "pi.delivery — add 3 digits/day, recall full sequence", d: "2 min · memory progression: 3 → 6 → 12+ digits", cat: "memory" },
+  { a: "Mental rotation puzzle", b: "mentalrotation.com — rotate 3D shapes vs timer", d: "2 min · spatial reasoning", cat: "logic" },
+  { a: "Reverse dictionary", b: "reversedictionary.org — find the word for a definition", d: "2 min · word retrieval under pressure", cat: "speed" },
+  { a: "Learn 1 IPA symbol + pronounce", b: "topHonetics.com — type word → see IPA → say it", d: "2 min · phonetics skill", cat: "learning" },
+  { a: "Mental math fractions", b: "arithmetic.zetamac.com — set to fractions/percentages", d: "2 min · harder arithmetic", cat: "logic" },
+  { a: "Wim Hof breathing 1 round", b: "YouTube 'Wim Hof guided 3 min' — 30 breaths + hold", d: "3 min · altered state + focus", cat: "reset" },
+];
+
+// ── STORAGE ───────────────────────────────────────
+const STORAGE_KEY = "cc_v2";
+
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch(e) { return {}; }
+}
+function setStorage(v) { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function loadState() {
+  const s = getStorage();
+  const today = todayStr();
+  if (s.today !== today) {
+    const streakInc = s.today && s.prevDate === todayStrOffset(-1) ? (s.streak || 0) + 1 : 1;
+    return { today, sessions: [], streak: s.today ? streakInc : 0, prevDate: s.today };
+  }
+  return s;
+}
+function todayStrOffset(days) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+function saveState(state) { setStorage({ ...state, prevDate: state.today }); }
+
+let state = loadState();
+let mode = "any";
+let spinning = false;
+// ── SHUFFLE DECKS ─────────────────────────────────
+let deckP = [];
+let deckC = [];
+let pi = 0, ci = 0;
+
+function reshuffleDecks() {
+  deckP = [...PHYSICAL].sort(() => Math.random() - 0.5);
+  deckC = [...COGNITIVE].sort(() => Math.random() - 0.5);
+  pi = 0;
+  ci = 0;
+}
+reshuffleDecks();
+
+// ── NATIVE BRIDGE ─────────────────────────────────
+window.loadItems = function(json) {
+  try {
+    const data = JSON.parse(json);
+    if (data.physical) PHYSICAL = data.physical;
+    if (data.cognitive) COGNITIVE = data.cognitive;
+    reshuffleDecks();
+    resetCard();
+  } catch(e) {}
+};
+
+// ── SETTINGS BUTTON ────────────────────────────────
+document.getElementById("settingsBtn").addEventListener("click", () => {
+  if (window.android && window.android.openSettings) {
+    window.android.openSettings();
+  }
+});
+
+// ── PICK ACTIVITY ─────────────────────────────────
+function pickActivity() {
+  if (mode === "physical") {
+    if (pi >= deckP.length) { reshuffleDecks(); }
+    return { ...deckP[pi++], type: "physical" };
+  }
+  if (mode === "cognitive") {
+    if (ci >= deckC.length) { reshuffleDecks(); }
+    return { ...deckC[ci++], type: "cognitive" };
+  }
+
+  // "any" mode: alternate physical ⇄ cognitive, cycling through shuffled decks
+  const sessions = state.sessions;
+  let type;
+  if (sessions.length === 0) {
+    type = Math.random() < 0.5 ? "physical" : "cognitive";
+  } else {
+    const lastType = sessions[sessions.length - 1].type;
+    const lastThree = sessions.slice(-3).map(s => s.type);
+    const allSame = lastThree.length === 3 && lastThree.every(t => t === lastType);
+    type = allSame ? (lastType === "physical" ? "cognitive" : "physical") : (lastType === "physical" ? "cognitive" : "physical");
+  }
+
+  if (type === "physical") {
+    if (pi >= deckP.length) { reshuffleDecks(); }
+    // physical → physical → physical guard: if we just came from cognitive, and next would be physical
+    // check the last two physical items. If both were push+pull, try to pick a non-push+pull from what's left
+    const item = deckP[pi++];
+    return { ...item, type: "physical" };
+  } else {
+    if (ci >= deckC.length) { reshuffleDecks(); }
+    return { ...deckC[ci++], type: "cognitive" };
+  }
+}
+
+// ── RENDER ────────────────────────────────────────
+const card    = document.getElementById("card");
+const spinBtn = document.getElementById("spinBtn");
+const totalEl = document.getElementById("totalCount");
+const streakEl = document.getElementById("streakCount");
+const historyEl = document.getElementById("history");
+
+function buildCardHTML(item) {
+  if (item.type === "physical") {
+    const lines = [];
+    lines.push(`<span class="activity-line highlight">${item.a}</span>`);
+    if (item.b) lines.push(`<span class="activity-line secondary">+ ${item.b}</span>`);
+    lines.push(`<span class="category-tag physical">${item.cat}</span>`);
+    return lines.join("");
+  }
+  // cognitive
+  const lines = [];
+  lines.push(`<span class="activity-line highlight">${item.a}</span>`);
+  if (item.b) lines.push(`<span class="activity-line secondary">${item.b}</span>`);
+  lines.push(`<span class="category-tag cognitive">${item.cat}</span>`);
+  return lines.join("");
+}
+
+function clickSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(120, t + 0.08);
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    if (navigator.vibrate) navigator.vibrate(15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  } catch(e) {}
+}
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+
+  clickSound();
+  const item = pickActivity();
+
+  card.classList.add("spinning");
+  card.innerHTML = '<span class="idle-text">...</span>';
+
+  setTimeout(() => {
+    card.classList.remove("spinning");
+    card.classList.add("revealed");
+    card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
+
+    state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now() });
+    saveState(state);
+    updateUI();
+
+    spinBtn.disabled = false;
+    spinning = false;
+
+    clearTimeout(window._idleTimer);
+    window._idleTimer = setTimeout(resetCard, 10000);
+  }, 500);
+}
+
+function resetCard() {
+  card.classList.remove("revealed");
+  card.innerHTML = '<span class="idle-text">spacebar or tap ↓</span>';
+}
+
+function updateUI() {
+  totalEl.textContent = state.sessions.length;
+  streakEl.textContent = state.streak;
+  renderHistory();
+}
+
+function renderHistory() {
+  const dots = state.sessions.map(s =>
+    `<span class="dot ${s.type === 'physical' ? 'p' : 'c'}" title="${s.cat || ''}"></span>`
+  ).join("");
+  historyEl.innerHTML = dots || '<span style="color:#222;font-size:11px;">no spins yet</span>';
+}
+
+function resetToday() {
+  state.sessions = [];
+  state.today = todayStr();
+  saveState(state);
+  updateUI();
+  resetCard();
+}
+
+// ── MODE BUTTONS ──────────────────────────────────
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    mode = btn.dataset.mode;
+  });
+});
+
+spinBtn.addEventListener("click", spin);
+document.getElementById("resetBtn").addEventListener("click", resetToday);
+
+// keyboard shortcut
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && !spinning) {
+    e.preventDefault();
+    spin();
+  }
+});
+
+// init
+updateUI();
+</script>
+</body>
+</html>
