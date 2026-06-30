@@ -15,6 +15,7 @@ import com.circuitbreak.app.data.ItemStore
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+    private var pageLoaded = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,37 +25,61 @@ class MainActivity : ComponentActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.allowFileAccess = true
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView, url: String) {
+                    pageLoaded = true
+                    pushItems()
+                    pushSoundPref()
+                }
+            }
             webChromeClient = WebChromeClient()
             addJavascriptInterface(CircuitBridge(), "android")
         }
 
         setContentView(webView)
-
-        // Load the HTML once, then push items
         webView.loadUrl("file:///android_asset/spin.html")
     }
 
     override fun onResume() {
         super.onResume()
-        // Push merged item lists to the WebView
-        pushItems()
+        if (pageLoaded) {
+            pushItems()
+            pushSoundPref()
+        }
+    }
+
+    override fun onDestroy() {
+        webView.destroy()
+        super.onDestroy()
     }
 
     private fun pushItems() {
         val (defPhys, defCog) = ItemStore.loadDefaults(this)
         val phys = ItemStore.getMergedItems(this, defPhys, "physical")
         val cog = ItemStore.getMergedItems(this, defCog, "cognitive")
-        val json = ItemStore.allToJson(phys, cog).replace("'", "\\'")
+        val json = ItemStore.allToJson(phys, cog)
+        val safeJson = json
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\n", "\\n")
+            .replace("\r", "")
 
         webView.post {
-            webView.evaluateJavascript("if(window.loadItems) window.loadItems('$json')", null)
+            webView.evaluateJavascript("if(window.loadItems) window.loadItems('$safeJson')", null)
+        }
+    }
+
+    private fun pushSoundPref() {
+        val enabled = ItemStore.isSoundEnabled(this)
+        webView.post {
+            webView.evaluateJavascript("if(window.setSound) window.setSound($enabled)", null)
         }
     }
 
     private val settingsLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             pushItems()
+            pushSoundPref()
         }
 
     inner class CircuitBridge {

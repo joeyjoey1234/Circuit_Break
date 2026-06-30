@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,24 +26,19 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SettingsScreen(
-                loadItems = { type ->
+                loadDefaults = { ItemStore.loadDefaults(this) },
+                loadMerged = { type ->
                     val (defPhys, defCog) = ItemStore.loadDefaults(this)
                     ItemStore.getMergedItems(this, if (type == "physical") defPhys else defCog, type)
                 },
-                onRemove = { type, item ->
-                    val (defPhys, defCog) = ItemStore.loadDefaults(this)
-                    val defs = if (type == "physical") defPhys else defCog
-                    if (defs.any { it.a == item.a }) {
-                        val removed = ItemStore.getRemoved(this).toMutableSet()
-                        removed.add(item.a)
-                        ItemStore.setRemoved(this, removed)
-                    } else {
-                        ItemStore.removeCustom(this, type, item)
-                    }
-                },
-                onAdd = { type, item ->
-                    ItemStore.addCustom(this, type, item)
-                }
+                isRemoved = { false }, // handled internally now
+                onRemoveDefault = { ItemStore.addRemoved(this, it) },
+                onRemoveCustom = { type, uid -> ItemStore.removeCustomById(this, type, uid) },
+                onAdd = { type, item -> ItemStore.addCustom(this, type, item) },
+                onEdit = { type, oldUid, newItem -> ItemStore.updateCustom(this, type, oldUid, newItem) },
+                onRestoreAll = { ItemStore.restoreAllDefaults(this) },
+                soundEnabled = { ItemStore.isSoundEnabled(this) },
+                onSoundToggle = { ItemStore.setSoundEnabled(this, it) }
             )
         }
     }
@@ -52,23 +46,37 @@ class SettingsActivity : ComponentActivity() {
 
 @Composable
 fun SettingsScreen(
-    loadItems: (String) -> List<ActivityItem>,
-    onRemove: (String, ActivityItem) -> Unit,
-    onAdd: (String, ActivityItem) -> Unit
+    loadDefaults: () -> Pair<List<ActivityItem>, List<ActivityItem>>,
+    loadMerged: (String) -> List<ActivityItem>,
+    isRemoved: (String) -> Boolean,
+    onRemoveDefault: (String) -> Unit,
+    onRemoveCustom: (String, String) -> Unit,
+    onAdd: (String, ActivityItem) -> Unit,
+    onEdit: (String, String, ActivityItem) -> Unit,
+    onRestoreAll: () -> Unit,
+    soundEnabled: () -> Boolean,
+    onSoundToggle: (Boolean) -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("physical", "cognitive")
-
-    val items = remember(selectedTab) { loadItems(tabs[selectedTab]) }
-    // Force recomposition after add/remove
     val trigger = remember { mutableIntStateOf(0) }
-    val displayItems = remember(selectedTab, trigger.intValue) { loadItems(tabs[selectedTab]) }
+    val displayItems = remember(selectedTab, trigger.intValue) {
+        loadMerged(tabs[selectedTab])
+    }
+
+    val (defPhys, defCog) = remember { loadDefaults() }
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingItem by remember { mutableStateOf<ActivityItem?>(null) }
+    var confirmRemove by remember { mutableStateOf<ActivityItem?>(null) }
+    var showRestoreConfirm by remember { mutableStateOf(false) }
+
     var newA by remember { mutableStateOf("") }
     var newB by remember { mutableStateOf("") }
     var newD by remember { mutableStateOf("") }
     var newCat by remember { mutableStateOf("") }
+
+    val soundOn = remember { mutableStateOf(soundEnabled()) }
 
     Column(
         modifier = Modifier
@@ -76,7 +84,30 @@ fun SettingsScreen(
             .background(DarkBg)
             .padding(16.dp)
     ) {
-        Text("Edit Items", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Edit Items", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Sound", color = TextMuted, fontSize = 13.sp)
+                Spacer(Modifier.width(8.dp))
+                Switch(
+                    checked = soundOn.value,
+                    onCheckedChange = {
+                        soundOn.value = it
+                        onSoundToggle(it)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Accent,
+                        checkedTrackColor = Accent.copy(alpha = 0.3f),
+                        uncheckedThumbColor = TextMuted,
+                        uncheckedTrackColor = Border
+                    )
+                )
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -101,6 +132,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(displayItems) { item ->
+                val isCustom = !defPhys.any { it.uid() == item.uid() } && !defCog.any { it.uid() == item.uid() }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
@@ -117,15 +149,38 @@ fun SettingsScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(item.a, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             if (item.b.isNotBlank()) Text(item.b, color = TextSecondary, fontSize = 12.sp)
-                            Text("${item.cat}  ·  ${item.d}", color = TextMuted, fontSize = 11.sp)
+                            Row {
+                                Text("${item.cat}  ·  ${item.d}", color = TextMuted, fontSize = 11.sp)
+                                if (isCustom) Text("  · custom", color = AccentGreen, fontSize = 11.sp)
+                            }
                         }
-                        TextButton(onClick = {
-                            onRemove(tabs[selectedTab], item)
-                            trigger.intValue++
-                        }) {
-                            Text("Remove", color = Color(0xFFFF4444), fontSize = 13.sp)
+                        Row {
+                            if (isCustom) {
+                                TextButton(onClick = {
+                                    newA = item.a; newB = item.b; newD = item.d; newCat = item.cat
+                                    editingItem = item
+                                    showAddDialog = true
+                                }) {
+                                    Text("Edit", color = TextSecondary, fontSize = 13.sp)
+                                }
+                            }
+                            TextButton(onClick = {
+                                confirmRemove = item
+                            }) {
+                                Text("Remove", color = Color(0xFFFF4444), fontSize = 13.sp)
+                            }
                         }
                     }
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(4.dp))
+                TextButton(
+                    onClick = { showRestoreConfirm = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Restore removed defaults", color = TextMuted, fontSize = 13.sp)
                 }
             }
         }
@@ -133,7 +188,11 @@ fun SettingsScreen(
         Spacer(Modifier.height(8.dp))
 
         Button(
-            onClick = { showAddDialog = true },
+            onClick = {
+                newA = ""; newB = ""; newD = ""; newCat = ""
+                editingItem = null
+                showAddDialog = true
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Accent),
             shape = RoundedCornerShape(12.dp)
@@ -142,51 +201,97 @@ fun SettingsScreen(
         }
     }
 
-    if (showAddDialog) {
+    // ── remove confirmation ──
+    confirmRemove?.let { item ->
         AlertDialog(
-            onDismissRequest = { showAddDialog = false },
+            onDismissRequest = { confirmRemove = null },
             containerColor = CardBg,
-            title = { Text("Add ${tabs[selectedTab]} item", color = Color.White) },
+            title = { Text("Remove item?", color = Color.White) },
+            text = { Text("\"${item.a}\" will be removed from the list.", color = TextSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    val isCustom = !defPhys.any { it.uid() == item.uid() } && !defCog.any { it.uid() == item.uid() }
+                    if (isCustom) {
+                        onRemoveCustom(tabs[selectedTab], item.uid())
+                    } else {
+                        onRemoveDefault(item.uid())
+                    }
+                    trigger.intValue++
+                    confirmRemove = null
+                }) { Text("Remove", color = Color(0xFFFF4444)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemove = null }) { Text("Cancel", color = TextMuted) }
+            }
+        )
+    }
+
+    // ── restore confirmation ──
+    if (showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirm = false },
+            containerColor = CardBg,
+            title = { Text("Restore all defaults?", color = Color.White) },
+            text = { Text("All previously removed default items will reappear in the spin list.", color = TextSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onRestoreAll()
+                    trigger.intValue++
+                    showRestoreConfirm = false
+                }) { Text("Restore", color = Accent) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreConfirm = false }) { Text("Cancel", color = TextMuted) }
+            }
+        )
+    }
+
+    // ── add / edit dialog ──
+    if (showAddDialog) {
+        val isEdit = editingItem != null
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false; editingItem = null },
+            containerColor = CardBg,
+            title = { Text(if (isEdit) "Edit item" else "Add ${tabs[selectedTab]} item", color = Color.White) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = newA, onValueChange = { newA = it },
-                        label = { Text("Activity") },
-                        singleLine = true,
-                        colors = textFieldColors()
+                        label = { Text("Activity") }, singleLine = true, colors = textFieldColors()
                     )
                     OutlinedTextField(
                         value = newB, onValueChange = { newB = it },
-                        label = { Text("Resource / instruction") },
-                        singleLine = true,
-                        colors = textFieldColors()
+                        label = { Text("Resource / instruction") }, singleLine = true, colors = textFieldColors()
                     )
                     OutlinedTextField(
                         value = newD, onValueChange = { newD = it },
-                        label = { Text("Time / detail") },
-                        singleLine = true,
-                        colors = textFieldColors()
+                        label = { Text("Time / detail") }, singleLine = true, colors = textFieldColors()
                     )
                     OutlinedTextField(
                         value = newCat, onValueChange = { newCat = it },
-                        label = { Text("Category") },
-                        singleLine = true,
-                        colors = textFieldColors()
+                        label = { Text("Category") }, singleLine = true, colors = textFieldColors()
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     if (newA.isNotBlank()) {
-                        onAdd(tabs[selectedTab], ActivityItem(newA, newB, newD, newCat, tabs[selectedTab]))
+                        val newItem = ActivityItem(newA, newB, newD, newCat, tabs[selectedTab])
+                        if (isEdit) {
+                            onEdit(tabs[selectedTab], editingItem!!.uid(), newItem)
+                        } else {
+                            onAdd(tabs[selectedTab], newItem)
+                        }
                         trigger.intValue++
                         newA = ""; newB = ""; newD = ""; newCat = ""
-                        showAddDialog = false
+                        showAddDialog = false; editingItem = null
                     }
-                }) { Text("Add", color = Accent) }
+                }) { Text(if (isEdit) "Save" else "Add", color = Accent) }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancel", color = TextMuted) }
+                TextButton(onClick = { showAddDialog = false; editingItem = null }) {
+                    Text("Cancel", color = TextMuted)
+                }
             }
         )
     }

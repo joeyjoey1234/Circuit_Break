@@ -177,6 +177,23 @@
     cursor: not-allowed;
     transform: none;
   }
+  .spin-row {
+    display: flex;
+    gap: 8px;
+  }
+  .spin-row .spin-btn { flex: 1; }
+  .skip-btn {
+    width: 56px;
+    border-radius: 14px;
+    border: 1px solid #2a2a2a;
+    background: #141414;
+    color: #555;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .skip-btn:active { background: #1a1a1a; color: #888; }
+  .skip-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
   /* Counter + streak */
   .stats {
@@ -266,7 +283,10 @@
     </div>
   </div>
 
-  <button class="spin-btn" id="spinBtn">SPIN</button>
+  <div class="spin-row">
+    <button class="spin-btn" id="spinBtn">SPIN</button>
+    <button class="skip-btn" id="skipBtn" disabled>↻</button>
+  </div>
 
   <div class="stats">
     <div class="col">
@@ -390,6 +410,7 @@ function reshuffleDecks() {
 reshuffleDecks();
 
 // ── NATIVE BRIDGE ─────────────────────────────────
+let soundEnabled = true;
 window.loadItems = function(json) {
   try {
     const data = JSON.parse(json);
@@ -398,6 +419,9 @@ window.loadItems = function(json) {
     reshuffleDecks();
     resetCard();
   } catch(e) {}
+};
+window.setSound = function(enabled) {
+  soundEnabled = enabled;
 };
 
 // ── SETTINGS BUTTON ────────────────────────────────
@@ -466,6 +490,7 @@ function buildCardHTML(item) {
 }
 
 function clickSound() {
+  if (!soundEnabled) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const t = ctx.currentTime;
@@ -505,6 +530,7 @@ function spin() {
     updateUI();
 
     spinBtn.disabled = false;
+    document.getElementById("skipBtn").disabled = false;
     spinning = false;
 
     clearTimeout(window._idleTimer);
@@ -548,7 +574,29 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 });
 
 spinBtn.addEventListener("click", spin);
+document.getElementById("skipBtn").addEventListener("click", () => {
+  if (spinning) return;
+  // re-deal: just pick a new activity and show it
+  const item = pickActivity();
+  card.classList.add("revealed");
+  card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
+  state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now() });
+  saveState(state);
+  updateUI();
+  clearTimeout(window._idleTimer);
+  window._idleTimer = setTimeout(resetCard, 10000);
+});
 document.getElementById("resetBtn").addEventListener("click", resetToday);
+
+// swipe to spin (touch)
+let touchStartX = 0;
+card.addEventListener("touchstart", (e) => {
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+card.addEventListener("touchend", (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60 && !spinning) spin();
+});
 
 // keyboard shortcut
 document.addEventListener("keydown", (e) => {
