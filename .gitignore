@@ -9,3 +9,9 @@
 .cxx
 local.properties
 /app/build
+
+# AI context files
+CONTEXT.md
+AGENTS.md
+CLAUDE.md
+.kilo/
