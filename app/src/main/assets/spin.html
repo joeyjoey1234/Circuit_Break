@@ -552,6 +552,8 @@ function saveState(state) {
 }
 
 // ── PROGRESSIVE OVERLOAD TRACKING ─────────────────
+let decayed = false;
+
 function parseReps(name) {
   // extract exercise name and base reps: "Push-ups x10" -> ["Push-ups", 10]
   const m = name.match(/^(.+?)\s+x(\d+)/);
@@ -562,17 +564,29 @@ function parseReps(name) {
 function getSuggestedReps(name) {
   const parsed = parseReps(name);
   if (!parsed) return null;
-  // For exercises with a + (combo), don't track
   if (name.includes("+")) return null;
   
-  const tally = state.physTally[parsed.ex] || { done: 0, baseReps: parsed.base };
+  const tally = state.physTally[parsed.ex] || { done: 0, baseReps: parsed.base, lastDone: null };
   const done = tally.done || 0;
   const base = parsed.base;
-  const step = Math.max(1, Math.round(base * 0.15)); // ~15% increase per step
-  const steps = Math.floor(done / 8); // every 8 completions
-  const max = Math.round(base * 2); // cap at 2x base
+  
+  let effectiveDone = done;
+  decayed = false;
+  if (tally.lastDone) {
+    const daysSince = Math.floor((Date.now() - new Date(tally.lastDone).getTime()) / 86400000);
+    if (daysSince >= 7) {
+      const weeksGone = Math.floor(daysSince / 7);
+      effectiveDone = Math.max(0, done - weeksGone * 8);
+      if (effectiveDone < done) decayed = true;
+    }
+  }
+
+  const step = Math.max(1, Math.round(base * 0.15));
+  const steps = Math.floor(effectiveDone / 8);
+  const max = Math.round(base * 2);
   const suggested = Math.min(base + steps * step, max);
-  return suggested !== base ? suggested : null;
+  if (suggested === base) return null;
+  return { reps: suggested, up: suggested > base, decayed: decayed };
 }
 
 function recordPhysCompletion(name) {
@@ -580,9 +594,10 @@ function recordPhysCompletion(name) {
   if (!parsed || name.includes("+")) return;
   
   if (!state.physTally[parsed.ex]) {
-    state.physTally[parsed.ex] = { done: 1, baseReps: parsed.base };
+    state.physTally[parsed.ex] = { done: 1, baseReps: parsed.base, lastDone: todayStr() };
   } else {
     state.physTally[parsed.ex].done++;
+    state.physTally[parsed.ex].lastDone = todayStr();
   }
 }
 
@@ -671,17 +686,18 @@ const streakEl = document.getElementById("streakCount");
 const historyEl = document.getElementById("history");
 
 function buildCardHTML(item) {
-  // Check for progressive overload adjustment
   let name = item.a;
+  let hint = "";
   if (item.type === "physical") {
-    const suggested = getSuggestedReps(item.a);
-    if (suggested) {
-      name = item.a.replace(/x\d+/, "x" + suggested);
+    const sugg = getSuggestedReps(item.a);
+    if (sugg) {
+      name = item.a.replace(/x\d+/, "x" + sugg.reps);
+      hint = sugg.decayed ? " ↓" : (sugg.up ? " ↑" : "");
     }
   }
   if (item.type === "physical") {
     const lines = [];
-    lines.push(`<span class="activity-line highlight">${name}</span>`);
+    lines.push(`<span class="activity-line highlight">${name}${hint}</span>`);
     if (item.b) lines.push(`<span class="activity-line secondary">+ ${item.b}</span>`);
     lines.push(`<span class="category-tag physical">${item.cat}</span>`);
     return lines.join("");
