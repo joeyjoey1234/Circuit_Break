@@ -288,6 +288,51 @@
   .neuro-tracker .neuro-text strong {
     color: #22c55e;
   }
+
+  /* Mood check-in overlay */
+  .mood-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 10; flex-direction: column; gap: 16px;
+  }
+  .mood-overlay.show { display: flex; }
+  .mood-overlay h3 { color: #fff; font-size: 18px; margin-bottom: 4px; }
+  .mood-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 300px; }
+  .mood-btn {
+    padding: 10px 16px; border-radius: 10px; border: 1px solid #333;
+    background: #141414; color: #aaa; font-size: 13px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mood-btn:active { background: #4a4aff; color: #fff; border-color: #4a4aff; }
+
+  /* Post-spin reflection */
+  .reflect-row {
+    display: none; gap: 8px; margin-top: -8px;
+  }
+  .reflect-row.show { display: flex; }
+  .reflect-btn {
+    flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #2a2a2a;
+    background: #141414; color: #aaa; font-size: 13px; cursor: pointer; text-align: center;
+  }
+  .reflect-btn:active { color: #fff; }
+  .reflect-btn.yes:active { background: #22c55e; border-color: #22c55e; }
+  .reflect-btn.no:active { background: #ff4444; border-color: #ff4444; }
+  .reflect-stats { font-size: 10px; color: #444; text-align: center; margin-top: -6px; }
+
+  /* Calendar chain */
+  .calendar-grid {
+    display: flex; gap: 3px; justify-content: center; flex-wrap: wrap;
+  }
+  .calendar-grid .day {
+    width: 14px; height: 14px; border-radius: 3px; background: #1f1f1f;
+  }
+  .calendar-grid .day.used { background: #22c55e; }
+
+  /* Identity line on idle card */
+  .identity-line {
+    font-size: 12px; color: #444; font-style: italic;
+  }
 </style>
 </head>
 <body>
@@ -312,7 +357,8 @@
 
   <div class="card-container">
     <div class="card" id="card">
-      <span class="idle-text">spacebar or tap ↓</span>
+      <span class="idle-text" id="idleText">spacebar or tap ↓</span>
+      <span class="identity-line" id="identityLine"></span>
     </div>
   </div>
 
@@ -320,6 +366,13 @@
     <button class="spin-btn" id="spinBtn">SPIN</button>
     <button class="skip-btn" id="skipBtn" disabled>↻</button>
   </div>
+
+  <div class="reflect-row" id="reflectRow">
+    <span style="flex:0 0 auto;color:#777;font-size:12px;padding-right:8px;">Still craving?</span>
+    <button class="reflect-btn yes" id="reflectYes">No</button>
+    <button class="reflect-btn no" id="reflectNo">Yes</button>
+  </div>
+  <div class="reflect-stats" id="reflectStats"></div>
 
   <div class="stats">
     <div class="col">
@@ -342,6 +395,23 @@
     <div class="neuro-label">neuroplasticity progress</div>
     <div class="neuro-bar-outer"><div class="neuro-bar-inner" id="neuroBar" style="width:0%"></div></div>
     <div class="neuro-text" id="neuroText">loading...</div>
+  </div>
+
+  <div class="history-section">
+    <div class="section-label">don't break the chain</div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</div>
+
+<!-- mood check-in overlay -->
+<div class="mood-overlay" id="moodOverlay">
+  <h3>what are you feeling?</h3>
+  <div class="mood-grid">
+    <button class="mood-btn" data-mood="bored">bored</button>
+    <button class="mood-btn" data-mood="restless">restless</button>
+    <button class="mood-btn" data-mood="craving">craving</button>
+    <button class="mood-btn" data-mood="anxious">anxious</button>
+    <button class="mood-btn" data-mood="unfocused">unfocused</button>
   </div>
 </div>
 
@@ -570,8 +640,25 @@ function clickSound() {
 
 function spin() {
   if (spinning) return;
+  // Show mood check-in first
+  document.getElementById("moodOverlay").classList.add("show");
+}
+
+// ── MOOD CHECK-IN ─────────────────────────────────
+let pendingMood = null;
+document.querySelectorAll(".mood-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    pendingMood = btn.dataset.mood;
+    document.getElementById("moodOverlay").classList.remove("show");
+    doSpin();
+  });
+});
+
+function doSpin() {
   spinning = true;
   spinBtn.disabled = true;
+  document.getElementById("skipBtn").disabled = true;
+  document.getElementById("reflectRow").classList.remove("show");
 
   clickSound();
   const item = pickActivity();
@@ -584,7 +671,8 @@ function spin() {
     card.classList.add("revealed");
     card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
 
-    state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now() });
+    state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now(), mood: pendingMood });
+    pendingMood = null;
     saveState(state);
     updateUI();
 
@@ -592,14 +680,19 @@ function spin() {
     document.getElementById("skipBtn").disabled = false;
     spinning = false;
 
+    // show reflection
+    document.getElementById("reflectRow").classList.add("show");
+
     clearTimeout(window._idleTimer);
-    window._idleTimer = setTimeout(resetCard, 10000);
+    window._idleTimer = setTimeout(resetCard, 15000);
   }, 500);
 }
 
 function resetCard() {
   card.classList.remove("revealed");
-  card.innerHTML = '<span class="idle-text">spacebar or tap ↓</span>';
+  document.getElementById("reflectRow").classList.remove("show");
+  document.getElementById("idleText").textContent = "spacebar or tap ↓";
+  updateIdentityLine();
 }
 
 function updateUI() {
@@ -607,6 +700,68 @@ function updateUI() {
   streakEl.textContent = state.streak;
   renderHistory();
   updateNeuroTracker();
+  updateReflectStats();
+  renderCalendar();
+}
+
+// ── POST-SPIN REFLECTION ──────────────────────────
+if (!state.reflections) state.reflections = { killed: 0, remained: 0 };
+document.getElementById("reflectYes").addEventListener("click", () => {
+  state.reflections.killed++;
+  saveState(state);
+  updateReflectStats();
+  document.getElementById("reflectRow").classList.remove("show");
+});
+document.getElementById("reflectNo").addEventListener("click", () => {
+  state.reflections.remained++;
+  saveState(state);
+  updateReflectStats();
+  document.getElementById("reflectRow").classList.remove("show");
+});
+
+function updateReflectStats() {
+  const r = state.reflections || { killed: 0, remained: 0 };
+  const total = r.killed + r.remained;
+  if (total > 0) {
+    const pct = Math.round((r.killed / total) * 100);
+    document.getElementById("reflectStats").textContent = pct + "% of spins killed the craving";
+  } else {
+    document.getElementById("reflectStats").textContent = "";
+  }
+}
+
+// ── CALENDAR CHAIN ────────────────────────────────
+function renderCalendar() {
+  const days = state.days || [];
+  const today = todayStr();
+  let html = "";
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    const used = days.includes(ds);
+    html += `<div class="day${used ? ' used' : ''}" title="${ds}"></div>`;
+  }
+  document.getElementById("calendarGrid").innerHTML = html;
+}
+
+// ── IDENTITY STATEMENT ────────────────────────────
+const identLines = [
+  "you're redirecting cravings into skill-building",
+  "every spin rewires a habit",
+  "dopamine earned, not borrowed",
+  "this is what progress looks like",
+  "your brain is learning new routes",
+];
+
+function updateIdentityLine() {
+  const n = state.sessions.length;
+  if (n > 0 && n % 5 === 0) {
+    const idx = Math.floor(n / 5) % identLines.length;
+    document.getElementById("identityLine").textContent = identLines[idx];
+  } else {
+    document.getElementById("identityLine").textContent = "";
+  }
 }
 
 function updateNeuroTracker() {
@@ -651,15 +806,15 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
 spinBtn.addEventListener("click", spin);
 document.getElementById("skipBtn").addEventListener("click", () => {
   if (spinning) return;
-  // re-deal: just pick a new activity and show it
   const item = pickActivity();
   card.classList.add("revealed");
   card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
-  state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now() });
+  state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now(), mood: "skip" });
   saveState(state);
   updateUI();
+  document.getElementById("reflectRow").classList.add("show");
   clearTimeout(window._idleTimer);
-  window._idleTimer = setTimeout(resetCard, 10000);
+  window._idleTimer = setTimeout(resetCard, 15000);
 });
 document.getElementById("resetBtn").addEventListener("click", resetToday);
 
@@ -677,6 +832,7 @@ card.addEventListener("touchend", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space" && !spinning) {
     e.preventDefault();
+    if (document.getElementById("moodOverlay").classList.contains("show")) return;
     spin();
   }
 });
