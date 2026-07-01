@@ -25,11 +25,11 @@ object ItemStore {
             val phys = gson.fromJson<List<ActivityItem>>(
                 gson.toJson(root["physical"]),
                 object : TypeToken<List<ActivityItem>>() {}.type
-            )
+            ).map { it.copy(type = "physical") }
             val cog = gson.fromJson<List<ActivityItem>>(
                 gson.toJson(root["cognitive"]),
                 object : TypeToken<List<ActivityItem>>() {}.type
-            )
+            ).map { it.copy(type = "cognitive") }
             val pair = Pair(phys, cog)
             cachedDefaults = pair
             pair
@@ -121,7 +121,7 @@ object ItemStore {
         )
     }
 
-    private fun clean(s: String): String = s
+    private fun clean(s: String): String = (s ?: "")
         .replace("\u2011", "-")   // non-breaking hyphen
         .replace("\u2192", ">")   // right arrow
         .replace("\u2014", "-")   // em dash
