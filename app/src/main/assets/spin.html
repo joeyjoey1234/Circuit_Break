@@ -838,10 +838,14 @@ document.querySelectorAll(".mood-btn").forEach(btn => {
 });
 
 function doSpin() {
+  try {
   spinning = true;
   spinBtn.disabled = true;
   document.getElementById("skipBtn").disabled = true;
   document.getElementById("reflectRow").classList.remove("show");
+  document.getElementById("timerRow").classList.remove("show");
+  document.getElementById("timerBar").classList.remove("show");
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 
   clickSound();
   const item = pickActivity();
@@ -849,7 +853,7 @@ function doSpin() {
   card.classList.add("spinning");
   card.innerHTML = '<span class="idle-text">...</span>';
 
-  setTimeout(() => {
+  setTimeout(() => { try {
     card.classList.remove("spinning");
     card.classList.add("revealed");
     card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
@@ -864,19 +868,22 @@ function doSpin() {
     document.getElementById("skipBtn").disabled = false;
     spinning = false;
 
-    // show reflection
     document.getElementById("reflectRow").classList.add("show");
     if (item.type === "cognitive") showTimer(item);
 
     clearTimeout(window._idleTimer);
     window._idleTimer = setTimeout(resetCard, 15000);
-  }, 500);
+  } catch(e) { spinBtn.disabled = false; spinning = false; } }, 500);
+  } catch(e) { spinBtn.disabled = false; spinning = false; }
 }
 
 function resetCard() {
   card.classList.remove("revealed");
   document.getElementById("reflectRow").classList.remove("show");
-  document.getElementById("idleText").textContent = "spacebar or tap ↓";
+  document.getElementById("timerRow").classList.remove("show");
+  document.getElementById("timerBar").classList.remove("show");
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  card.innerHTML = '<span class="idle-text" id="idleText">spacebar or tap ↓</span><span class="identity-line" id="identityLine"></span>';
   updateIdentityLine();
 }
 
