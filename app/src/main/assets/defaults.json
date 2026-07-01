@@ -169,10 +169,16 @@
       "cat": "reset"
     },
     {
-      "a": "Shadowbox to metronome 60 sec",
-      "b": "set metronome app to 80-120 bpm - punch on the beat",
-      "d": "rhythm + coordination + cardio",
-      "cat": "fullbody"
+      "a": "Practice punches 30 sec",
+      "b": "shadowbox or bag - focus on form",
+      "d": "striking technique",
+      "cat": "skill"
+    },
+    {
+      "a": "Practice kicks 30 sec",
+      "b": "roundhouse or teep - both sides",
+      "d": "striking technique",
+      "cat": "skill"
     }
   ],
   "cognitive": [
@@ -301,6 +307,66 @@
       "b": "YouTube 'Wim Hof guided 3 min' - 30 breaths + hold",
       "d": "3 min . altered state + focus",
       "cat": "reset"
+    },
+    {
+      "a": "Read 1 RSS article",
+      "b": "open RSS reader - read 1 full article",
+      "d": "2 min . stay informed",
+      "cat": "learning"
+    },
+    {
+      "a": "Research transmission",
+      "b": "look up 1 thing about transmissions - bookmark it",
+      "d": "3 min . car knowledge",
+      "cat": "learning"
+    },
+    {
+      "a": "Research engine",
+      "b": "look up 1 thing about engines - bookmark it",
+      "d": "3 min . car knowledge",
+      "cat": "learning"
+    },
+    {
+      "a": "Spanish: 5 flashcards",
+      "b": "Anki or app - review 5 cards",
+      "d": "2 min . maintain vocab",
+      "cat": "learning"
+    },
+    {
+      "a": "Corvette: 1 small task",
+      "b": "research, order part, or inspect 1 thing",
+      "d": "5 min . project progress",
+      "cat": "project"
+    },
+    {
+      "a": "Firebird: 1 small task",
+      "b": "research, order part, or inspect 1 thing",
+      "d": "5 min . project progress",
+      "cat": "project"
+    },
+    {
+      "a": "Clean office: 5 min",
+      "b": "tidy desk, file papers, wipe surfaces",
+      "d": "5 min . environment",
+      "cat": "project"
+    },
+    {
+      "a": "House improvement: 1 small task",
+      "b": "fix, measure, plan, or research 1 thing",
+      "d": "5 min . project progress",
+      "cat": "project"
+    },
+    {
+      "a": "Clean 1 thing in house",
+      "b": "pick 1 surface, shelf, or corner - make it spotless",
+      "d": "3 min . environment",
+      "cat": "project"
+    },
+    {
+      "a": "Steam sauna: 1 small task",
+      "b": "research, order part, or work on sauna 5 min",
+      "d": "5 min . project progress",
+      "cat": "project"
     }
   ]
 }

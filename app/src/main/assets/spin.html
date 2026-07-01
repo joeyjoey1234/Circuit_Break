@@ -255,6 +255,39 @@
     cursor: pointer;
     margin-top: -8px;
   }
+
+  /* Neuroplasticity tracker */
+  .neuro-tracker {
+    margin-top: 4px;
+    text-align: center;
+  }
+  .neuro-tracker .neuro-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+    margin-bottom: 4px;
+  }
+  .neuro-tracker .neuro-bar-outer {
+    height: 4px;
+    background: #1a1a1a;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .neuro-tracker .neuro-bar-inner {
+    height: 100%;
+    background: #22c55e;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+  .neuro-tracker .neuro-text {
+    font-size: 11px;
+    color: #555;
+  }
+  .neuro-tracker .neuro-text strong {
+    color: #22c55e;
+  }
 </style>
 </head>
 <body>
@@ -304,6 +337,12 @@
     <div class="history" id="history"></div>
   </div>
   <div class="reset" id="resetBtn">reset today</div>
+
+  <div class="neuro-tracker">
+    <div class="neuro-label">neuroplasticity progress</div>
+    <div class="neuro-bar-outer"><div class="neuro-bar-inner" id="neuroBar" style="width:0%"></div></div>
+    <div class="neuro-text" id="neuroText">loading...</div>
+  </div>
 </div>
 
 <script>
@@ -341,6 +380,8 @@ let PHYSICAL = [
   { a: "Trap bar shrug x10", b: "quick, no setup - grip + traps", d: "power + pull", cat: "pull" },
   { a: "Cold water face splash 30 sec", b: "sink - dive reflex > instant norepinephrine spike", d: "craving killer", cat: "reset" },
   { a: "Shadowbox to metronome 60 sec", b: "set metronome app to 80-120 bpm - punch on the beat", d: "rhythm + coordination + cardio", cat: "fullbody" },
+  { a: "Practice punches 30 sec", b: "shadowbox or bag - focus on form", d: "striking technique", cat: "skill" },
+  { a: "Practice kicks 30 sec", b: "roundhouse or teep - both sides", d: "striking technique", cat: "skill" },
 ];
 
 let COGNITIVE = [
@@ -365,6 +406,16 @@ let COGNITIVE = [
   { a: "Learn 1 IPA symbol + pronounce", b: "topHonetics.com - type word > see IPA > say it", d: "2 min . phonetics skill", cat: "learning" },
   { a: "Mental math fractions", b: "arithmetic.zetamac.com - set to fractions/percentages", d: "2 min . harder arithmetic", cat: "logic" },
   { a: "Wim Hof breathing 1 round", b: "YouTube 'Wim Hof guided 3 min' - 30 breaths + hold", d: "3 min . altered state + focus", cat: "reset" },
+  { a: "Read 1 RSS article", b: "open RSS reader - read 1 full article", d: "2 min . stay informed", cat: "learning" },
+  { a: "Research transmission", b: "look up 1 thing about transmissions - bookmark it", d: "3 min . car knowledge", cat: "learning" },
+  { a: "Research engine", b: "look up 1 thing about engines - bookmark it", d: "3 min . car knowledge", cat: "learning" },
+  { a: "Spanish: 5 flashcards", b: "Anki or app - review 5 cards", d: "2 min . maintain vocab", cat: "learning" },
+  { a: "Corvette: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project" },
+  { a: "Firebird: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project" },
+  { a: "Clean office: 5 min", b: "tidy desk, file papers, wipe surfaces", d: "5 min . environment", cat: "project" },
+  { a: "House improvement: 1 small task", b: "fix, measure, plan, or research 1 thing", d: "5 min . project progress", cat: "project" },
+  { a: "Clean 1 thing in house", b: "pick 1 surface, shelf, or corner - make it spotless", d: "3 min . environment", cat: "project" },
+  { a: "Steam sauna: 1 small task", b: "research, order part, or work on sauna 5 min", d: "5 min . project progress", cat: "project" },
 ];
 
 // ── STORAGE ───────────────────────────────────────
@@ -382,8 +433,9 @@ function loadState() {
   const today = todayStr();
   if (s.today !== today) {
     const streakInc = s.today && s.prevDate === todayStrOffset(-1) ? (s.streak || 0) + 1 : 1;
-    return { today, sessions: [], streak: s.today ? streakInc : 0, prevDate: s.today };
+    return { today, sessions: [], streak: s.today ? streakInc : 0, prevDate: s.today, days: s.days || [] };
   }
+  if (!s.days) s.days = [];
   return s;
 }
 function todayStrOffset(days) {
@@ -391,7 +443,14 @@ function todayStrOffset(days) {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0,10);
 }
-function saveState(state) { setStorage({ ...state, prevDate: state.today }); }
+function saveState(state) {
+  // record today if any sessions exist
+  if (!state.days) state.days = [];
+  if (state.sessions.length > 0 && !state.days.includes(state.today)) {
+    state.days.push(state.today);
+  }
+  setStorage({ ...state, prevDate: state.today });
+}
 
 let state = loadState();
 let mode = "any";
@@ -547,6 +606,22 @@ function updateUI() {
   totalEl.textContent = state.sessions.length;
   streakEl.textContent = state.streak;
   renderHistory();
+  updateNeuroTracker();
+}
+
+function updateNeuroTracker() {
+  const TARGET = 66;
+  const days = (state.days || []).length;
+  const pct = Math.min(100, Math.round((days / TARGET) * 100));
+  document.getElementById("neuroBar").style.width = pct + "%";
+  const remaining = Math.max(0, TARGET - days);
+  if (days === 0) {
+    document.getElementById("neuroText").innerHTML = "spin when you crave to start rewiring";
+  } else if (remaining === 0) {
+    document.getElementById("neuroText").innerHTML = "<strong>66 days reached</strong> · habit change consolidated";
+  } else {
+    document.getElementById("neuroText").innerHTML = "<strong>" + days + " days</strong> used · ~" + remaining + " days until permanent";
+  }
 }
 
 function renderHistory() {
