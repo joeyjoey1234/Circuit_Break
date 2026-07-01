@@ -470,6 +470,14 @@ let PHYSICAL = [
   { a: "Trap bar shrug x10", b: "quick, no setup - grip + traps", d: "power + pull", cat: "pull", dur: "long" },
   { a: "Cold water face splash 30 sec", b: "sink - dive reflex > instant norepinephrine spike", d: "craving killer", cat: "reset", dur: "long" },
   { a: "Shadowbox to metronome 60 sec", b: "set metronome app to 80-120 bpm - punch on the beat", d: "rhythm + coordination + cardio", cat: "fullbody", dur: "long" },
+    { a: "Jumping jacks x20", b: "", d: "cardio spike", cat: "cardio", dur: "short" },
+  { a: "Incline push-ups on desk x10", b: "hands on desk edge, full range", d: "upper body, no floor needed", cat: "skill", dur: "short" },
+  { a: "Standing knee raises x12/side", b: "drive knee up fast, core engaged", d: "core + cardio", cat: "cardio", dur: "short" },
+  { a: "Lateral shuffle 20 sec", b: "side to side, athletic stance", d: "agility + cardio", cat: "cardio", dur: "short" },
+  { a: "Shadow duck/weave 30 sec", b: "slip and roll like you're dodging punches", d: "boxing head movement", cat: "skill", dur: "short" },
+  { a: "Burpee singles x5", b: "squat down, kick legs back, stand - no jump", d: "full body quick", cat: "fullbody", dur: "short" },
+  { a: "Shoulder taps x15", b: "plank position, alternate tapping shoulders", d: "core + shoulder stability", cat: "core", dur: "short" },
+  { a: "Wrist circles x10/side", b: "rotate wrists both directions - desk worker relief", d: "mobility", cat: "mobility", dur: "short" },
   { a: "Practice punches 30 sec", b: "shadowbox or bag - focus on form", d: "striking technique", cat: "skill", dur: "long" },
   { a: "Practice kicks 30 sec", b: "roundhouse or teep - both sides", d: "striking technique", cat: "skill", dur: "long" },
 ];
@@ -539,7 +547,43 @@ function saveState(state) {
   if (state.sessions.length > 0 && !state.days.includes(state.today)) {
     state.days.push(state.today);
   }
+  if (!state.physTally) state.physTally = {};
   setStorage({ ...state, prevDate: state.today });
+}
+
+// ── PROGRESSIVE OVERLOAD TRACKING ─────────────────
+function parseReps(name) {
+  // extract exercise name and base reps: "Push-ups x10" -> ["Push-ups", 10]
+  const m = name.match(/^(.+?)\s+x(\d+)/);
+  if (!m) return null;
+  return { ex: m[1], base: parseInt(m[2]) };
+}
+
+function getSuggestedReps(name) {
+  const parsed = parseReps(name);
+  if (!parsed) return null;
+  // For exercises with a + (combo), don't track
+  if (name.includes("+")) return null;
+  
+  const tally = state.physTally[parsed.ex] || { done: 0, baseReps: parsed.base };
+  const done = tally.done || 0;
+  const base = parsed.base;
+  const step = Math.max(1, Math.round(base * 0.15)); // ~15% increase per step
+  const steps = Math.floor(done / 8); // every 8 completions
+  const max = Math.round(base * 2); // cap at 2x base
+  const suggested = Math.min(base + steps * step, max);
+  return suggested !== base ? suggested : null;
+}
+
+function recordPhysCompletion(name) {
+  const parsed = parseReps(name);
+  if (!parsed || name.includes("+")) return;
+  
+  if (!state.physTally[parsed.ex]) {
+    state.physTally[parsed.ex] = { done: 1, baseReps: parsed.base };
+  } else {
+    state.physTally[parsed.ex].done++;
+  }
 }
 
 let state = loadState();
@@ -627,9 +671,17 @@ const streakEl = document.getElementById("streakCount");
 const historyEl = document.getElementById("history");
 
 function buildCardHTML(item) {
+  // Check for progressive overload adjustment
+  let name = item.a;
+  if (item.type === "physical") {
+    const suggested = getSuggestedReps(item.a);
+    if (suggested) {
+      name = item.a.replace(/x\d+/, "x" + suggested);
+    }
+  }
   if (item.type === "physical") {
     const lines = [];
-    lines.push(`<span class="activity-line highlight">${item.a}</span>`);
+    lines.push(`<span class="activity-line highlight">${name}</span>`);
     if (item.b) lines.push(`<span class="activity-line secondary">+ ${item.b}</span>`);
     lines.push(`<span class="category-tag physical">${item.cat}</span>`);
     return lines.join("");
@@ -696,6 +748,7 @@ function doSpin() {
     card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
 
     state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now(), mood: pendingMood });
+    if (item.type === "physical") recordPhysCompletion(item.a);
     pendingMood = null;
     saveState(state);
     updateUI();
@@ -845,6 +898,7 @@ document.getElementById("skipBtn").addEventListener("click", () => {
   card.classList.add("revealed");
   card.innerHTML = `<div class="pulse" style="display:flex;flex-direction:column;align-items:center;gap:10px">${buildCardHTML(item)}</div>`;
   state.sessions.push({ type: item.type, cat: item.cat, ts: Date.now(), mood: "skip" });
+  if (item.type === "physical") recordPhysCompletion(item.a);
   saveState(state);
   updateUI();
   document.getElementById("reflectRow").classList.add("show");

@@ -209,6 +209,62 @@
       "d": "striking technique",
       "cat": "skill",
       "dur": "short"
+    },
+    {
+      "a": "Jumping jacks x20",
+      "b": "",
+      "d": "cardio spike",
+      "cat": "cardio",
+      "dur": "short"
+    },
+    {
+      "a": "Incline push-ups on desk x10",
+      "b": "hands on desk edge, full range",
+      "d": "upper body, no floor needed",
+      "cat": "skill",
+      "dur": "short"
+    },
+    {
+      "a": "Standing knee raises x12/side",
+      "b": "drive knee up fast, core engaged",
+      "d": "core + cardio",
+      "cat": "cardio",
+      "dur": "short"
+    },
+    {
+      "a": "Lateral shuffle 20 sec",
+      "b": "side to side, athletic stance",
+      "d": "agility + cardio",
+      "cat": "cardio",
+      "dur": "short"
+    },
+    {
+      "a": "Shadow duck/weave 30 sec",
+      "b": "slip and roll like you're dodging punches",
+      "d": "boxing head movement",
+      "cat": "skill",
+      "dur": "short"
+    },
+    {
+      "a": "Burpee singles x5",
+      "b": "squat down, kick legs back, stand - no jump",
+      "d": "full body quick",
+      "cat": "fullbody",
+      "dur": "short"
+    },
+    {
+      "a": "Shoulder taps x15",
+      "b": "plank position, alternate tapping shoulders",
+      "d": "core + shoulder stability",
+      "cat": "core",
+      "dur": "short"
+    },
+    {
+      "a": "Wrist circles x10/side",
+      "b": "rotate wrists both directions - desk worker relief",
+      "d": "mobility",
+      "cat": "mobility",
+      "dur": "short"
     }
   ],
   "cognitive": [
