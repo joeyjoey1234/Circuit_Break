@@ -16,19 +16,20 @@ import com.circuitbreak.app.data.ItemStore
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var webView: WebView
+    private var webView: WebView? = null
     private var pageLoaded = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        webView = WebView(this).apply {
+        val wv = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.allowFileAccess = true
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
+                    if (isFinishing || isDestroyed) return
                     pageLoaded = true
                     pushItems()
                     pushSoundPref()
@@ -38,9 +39,10 @@ class MainActivity : ComponentActivity() {
             webChromeClient = WebChromeClient()
             addJavascriptInterface(CircuitBridge(), "android")
         }
+        webView = wv
 
-        setContentView(webView)
-        webView.loadUrl("file:///android_asset/spin.html")
+        setContentView(wv)
+        wv.loadUrl("file:///android_asset/spin.html")
     }
 
     override fun onResume() {
@@ -52,26 +54,28 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        webView.destroy()
+        webView?.destroy()
         super.onDestroy()
     }
 
     private fun pushItems() {
+        val wv = webView ?: return
         val (defPhys, defCog) = ItemStore.loadDefaults(this)
         val phys = ItemStore.getMergedItems(this, defPhys, "physical")
         val cog = ItemStore.getMergedItems(this, defCog, "cognitive")
         val json = ItemStore.allToJson(phys, cog)
         val b64 = Base64.encodeToString(json.toByteArray(), Base64.NO_WRAP)
 
-        webView.post {
-            webView.evaluateJavascript("if(window.loadItems) window.loadItems(atob('$b64'))", null)
+        wv.post {
+            wv.evaluateJavascript("if(window.loadItems) window.loadItems(atob('$b64'))", null)
         }
     }
 
     private fun pushSoundPref() {
+        val wv = webView ?: return
         val enabled = ItemStore.isSoundEnabled(this)
-        webView.post {
-            webView.evaluateJavascript("if(window.setSound) window.setSound($enabled)", null)
+        wv.post {
+            wv.evaluateJavascript("if(window.setSound) window.setSound($enabled)", null)
         }
     }
 
@@ -82,18 +86,27 @@ class MainActivity : ComponentActivity() {
         }
 
     private fun checkForUpdate() {
-        val currentVersion = "v" + (packageManager.getPackageInfo(packageName, 0).versionName ?: "0")
+        val currentVersion = try {
+            "v" + (packageManager.getPackageInfo(packageName, 0).versionName ?: "0")
+        } catch (e: Exception) {
+            return
+        }
         UpdateChecker.check { release ->
             if (release != null && UpdateChecker.isNewer(currentVersion, release.tagName)) {
                 runOnUiThread {
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("Update Available")
-                        .setMessage("${release.tagName} is available (current: $currentVersion).\nDownload and install?")
-                        .setPositiveButton("Download") { _, _ ->
-                            UpdateChecker.downloadAndInstall(this@MainActivity, release.downloadUrl, release.fileName)
-                        }
-                        .setNegativeButton("Later", null)
-                        .show()
+                    if (isFinishing || isDestroyed) return@runOnUiThread
+                    try {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle("Update Available")
+                            .setMessage("${release.tagName} is available (current: $currentVersion).\nDownload and install?")
+                            .setPositiveButton("Download") { _, _ ->
+                                UpdateChecker.downloadAndInstall(this@MainActivity, release.downloadUrl, release.fileName)
+                            }
+                            .setNegativeButton("Later", null)
+                            .show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@MainActivity, "Update check failed", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
