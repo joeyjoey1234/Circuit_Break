@@ -343,6 +343,64 @@
   }
   .calendar-grid .day.used { background: #22c55e; }
 
+  /* Bottom actions */
+  .bottom-actions {
+    display: flex; justify-content: center; gap: 16px; margin-top: -12px;
+  }
+  .bottom-btn {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: #444; cursor: pointer;
+  }
+  .bottom-btn:active { color: #888; }
+
+  /* Stats & import modals */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: none; align-items: center;
+    justify-content: center; z-index: 10; flex-direction: column;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #141414; border: 1px solid #2a2a2a; border-radius: 14px;
+    padding: 20px; max-width: 360px; width: 90%; max-height: 70vh;
+    overflow-y: auto; color: #ccc; font-size: 13px; line-height: 1.6;
+  }
+  .modal-box h3 { color: #fff; font-size: 16px; margin-bottom: 12px; text-align: center; }
+  .modal-box .stat-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1a1a1a; }
+  .modal-box .stat-row .val { color: #22c55e; font-weight: 600; }
+  .modal-box textarea {
+    width: 100%; height: 100px; background: #0d0d0d; color: #ccc;
+    border: 1px solid #2a2a2a; border-radius: 8px; padding: 8px;
+    font-size: 11px; resize: vertical; font-family: monospace;
+  }
+  .modal-close {
+    margin-top: 12px; padding: 8px 24px; background: #4a4aff;
+    color: #fff; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+  }
+
+  /* Timer */
+  .timer-bar {
+    height: 3px; background: #1a1a1a; border-radius: 2px; margin-top: 8px;
+    overflow: hidden; display: none;
+  }
+  .timer-bar.show { display: block; }
+  .timer-fill {
+    height: 100%; background: #4a4aff; transition: width 1s linear; width: 100%;
+  }
+  .timer-row {
+    display: none; gap: 8px; margin-top: -8px; justify-content: center;
+  }
+  .timer-row.show { display: flex; }
+  .timer-btn {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid #2a2a2a;
+    background: #141414; color: #aaa; font-size: 12px; cursor: pointer;
+  }
+  .timer-btn:active { background: #4a4aff; color: #fff; border-color: #4a4aff; }
+  .timer-count {
+    color: #4a4aff; font-size: 14px; font-weight: 700; text-align: center;
+  }
+
   /* Identity line on idle card */
   .identity-line {
     font-size: 12px; color: #444; font-style: italic;
@@ -394,6 +452,13 @@
   </div>
   <div class="reflect-stats" id="reflectStats"></div>
 
+  <div class="timer-row" id="timerRow">
+    <span class="timer-count" id="timerCount">0:00</span>
+    <button class="timer-btn" id="timerStart">start timer</button>
+    <button class="timer-btn" id="timerStop" style="display:none;">stop</button>
+  </div>
+  <div class="timer-bar" id="timerBar"><div class="timer-fill" id="timerFill"></div></div>
+
   <div class="stats">
     <div class="col">
       <span class="count" id="totalCount">0</span>
@@ -409,7 +474,6 @@
     <div class="section-label">session history</div>
     <div class="history" id="history"></div>
   </div>
-  <div class="reset" id="resetBtn">reset today</div>
 
   <div class="neuro-tracker">
     <div class="neuro-label">neuroplasticity progress</div>
@@ -420,6 +484,13 @@
   <div class="history-section">
     <div class="section-label">don't break the chain</div>
     <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <div class="bottom-actions">
+    <span class="bottom-btn" id="statsBtn">stats</span>
+    <span class="bottom-btn" id="exportBtn">export</span>
+    <span class="bottom-btn" id="importBtn">import</span>
+    <span class="bottom-btn" id="resetBtn">reset</span>
   </div>
 </div>
 
@@ -432,6 +503,26 @@
     <button class="mood-btn" data-mood="craving">craving</button>
     <button class="mood-btn" data-mood="anxious">anxious</button>
     <button class="mood-btn" data-mood="unfocused">unfocused</button>
+  </div>
+</div>
+
+<!-- stats modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal-box">
+    <h3>your stats</h3>
+    <div id="statsContent"></div>
+    <button class="modal-close" onclick="document.getElementById('statsModal').classList.remove('show')">close</button>
+  </div>
+</div>
+
+<!-- import modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <h3>import data</h3>
+    <p style="color:#666;font-size:11px;margin-bottom:8px;">paste exported JSON here</p>
+    <textarea id="importText" placeholder='{"today":"...","sessions":[...],...}'></textarea>
+    <button class="modal-close" id="importConfirm" style="margin-right:8px;">restore</button>
+    <button class="modal-close" style="background:#1a1a1a;color:#666;" onclick="document.getElementById('importModal').classList.remove('show')">cancel</button>
   </div>
 </div>
 
@@ -775,6 +866,7 @@ function doSpin() {
 
     // show reflection
     document.getElementById("reflectRow").classList.add("show");
+    if (item.type === "cognitive") showTimer(item);
 
     clearTimeout(window._idleTimer);
     window._idleTimer = setTimeout(resetCard, 15000);
@@ -918,10 +1010,131 @@ document.getElementById("skipBtn").addEventListener("click", () => {
   saveState(state);
   updateUI();
   document.getElementById("reflectRow").classList.add("show");
+  if (item.type === "cognitive") showTimer(item);
   clearTimeout(window._idleTimer);
   window._idleTimer = setTimeout(resetCard, 15000);
 });
 document.getElementById("resetBtn").addEventListener("click", resetToday);
+
+// ── EXPORT / IMPORT ───────────────────────────────
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const data = JSON.stringify(getStorage(), null, 2);
+  navigator.clipboard.writeText(data).then(() => {
+    if (window.android) window.android.showToast("Data copied to clipboard");
+  }).catch(() => {
+    // fallback: show in import textarea
+    document.getElementById("importText").value = data;
+    document.getElementById("importModal").classList.add("show");
+  });
+});
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  document.getElementById("importText").value = "";
+  document.getElementById("importModal").classList.add("show");
+});
+
+document.getElementById("importConfirm").addEventListener("click", () => {
+  try {
+    const data = JSON.parse(document.getElementById("importText").value);
+    setStorage(data);
+    state = loadState();
+    reshuffleDecks();
+    updateUI();
+    resetCard();
+    document.getElementById("importModal").classList.remove("show");
+    if (window.android) window.android.showToast("Data restored");
+  } catch(e) {
+    if (window.android) window.android.showToast("Invalid JSON");
+  }
+});
+
+// ── STATS MODAL ───────────────────────────────────
+document.getElementById("statsBtn").addEventListener("click", () => {
+  const r = state.reflections || {};
+  const total = (r.killed || 0) + (r.remained || 0);
+  const killRate = total > 0 ? Math.round((r.killed || 0) / total * 100) : 0;
+  
+  // mood breakdown
+  const moodCounts = {};
+  state.sessions.forEach(s => {
+    if (s.mood) moodCounts[s.mood] = (moodCounts[s.mood] || 0) + 1;
+  });
+  const topMood = Object.entries(moodCounts).sort((a,b) => b[1]-a[1])[0];
+  
+  // most used exercise
+  const exCounts = {};
+  state.sessions.forEach(s => {
+    if (s.cat) exCounts[s.cat] = (exCounts[s.cat] || 0) + 1;
+  });
+  const topCat = Object.entries(exCounts).sort((a,b) => b[1]-a[1])[0];
+
+  // phys progress
+  let physProgress = "";
+  const tally = state.physTally || {};
+  const entries = Object.entries(tally).sort((a,b) => b[1].done - a[1].done);
+  entries.forEach(([ex, t]) => {
+    const gain = t.done >= 8 ? "↑" : "";
+    physProgress += `<div class="stat-row"><span>${ex} ${gain}</span><span class="val">${t.done}x</span></div>`;
+  });
+
+  const today = state.sessions.length;
+  const daysUsed = (state.days || []).length;
+  
+  document.getElementById("statsContent").innerHTML = `
+    <div class="stat-row"><span>spins today</span><span class="val">${today}</span></div>
+    <div class="stat-row"><span>days used</span><span class="val">${daysUsed}</span></div>
+    <div class="stat-row"><span>day streak</span><span class="val">${state.streak || 0}</span></div>
+    <div class="stat-row"><span>craving kill rate</span><span class="val">${killRate}%</span></div>
+    ${topMood ? `<div class="stat-row"><span>top mood</span><span class="val">${topMood[0]} (${topMood[1]}x)</span></div>` : ""}
+    ${topCat ? `<div class="stat-row"><span>top category</span><span class="val">${topCat[0]} (${topCat[1]}x)</span></div>` : ""}
+    ${physProgress ? `<div style="margin-top:12px;color:#666;font-size:11px;">exercise progress</div>${physProgress}` : ""}
+    ${entries.length === 0 ? `<div style="color:#444;margin-top:8px;">spin physical exercises to see progress</div>` : ""}
+  `;
+  document.getElementById("statsModal").classList.add("show");
+});
+
+// ── TIMER ─────────────────────────────────────────
+let timerSecs = 0;
+let timerRunning = false;
+let timerInterval = null;
+
+function showTimer(item) {
+  // extract time from detail: "3 min . altered state" -> 180 seconds
+  const m = item.d.match(/(\d+)\s*min/);
+  if (!m) { document.getElementById("timerRow").classList.remove("show"); document.getElementById("timerBar").classList.remove("show"); return; }
+  timerSecs = parseInt(m[1]) * 60;
+  timerRunning = false;
+  document.getElementById("timerCount").textContent = formatTime(timerSecs);
+  document.getElementById("timerStart").style.display = "";
+  document.getElementById("timerStop").style.display = "none";
+  document.getElementById("timerRow").classList.add("show");
+  document.getElementById("timerBar").classList.add("show");
+  document.getElementById("timerFill").style.width = "100%";
+}
+
+function formatTime(s) { const m = Math.floor(s/60); const sec = s%60; return m + ":" + (sec<10?"0":"") + sec; }
+
+document.getElementById("timerStart").addEventListener("click", () => {
+  timerRunning = true;
+  document.getElementById("timerStart").style.display = "none";
+  document.getElementById("timerStop").style.display = "";
+  const total = timerSecs;
+  timerInterval = setInterval(() => {
+    timerSecs--;
+    document.getElementById("timerCount").textContent = formatTime(timerSecs);
+    document.getElementById("timerFill").style.width = (timerSecs/total*100) + "%";
+    if (timerSecs <= 0) { stopTimer(); }
+  }, 1000);
+});
+
+document.getElementById("timerStop").addEventListener("click", stopTimer);
+function stopTimer() {
+  timerRunning = false; clearInterval(timerInterval);
+  document.getElementById("timerStart").style.display = "";
+  document.getElementById("timerStop").style.display = "none";
+  document.getElementById("timerRow").classList.remove("show");
+  document.getElementById("timerBar").classList.remove("show");
+}
 
 // swipe to spin (touch)
 let touchStartX = 0;

@@ -1,6 +1,9 @@
 package com.circuitbreak.app
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.util.Base64
@@ -11,6 +14,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.NotificationCompat
 import com.circuitbreak.app.data.ItemStore
 
 class MainActivity : ComponentActivity() {
@@ -18,9 +22,16 @@ class MainActivity : ComponentActivity() {
     private var webView: WebView? = null
     private var pageLoaded = false
 
+    companion object {
+        private const val NOTIFY_ID = 1
+        private const val CHANNEL_ID = "circuit_break"
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        createNotificationChannel()
 
         val wv = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -45,15 +56,51 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        cancelNotification()
         if (pageLoaded) {
             pushItems()
             pushSoundPref()
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        showNotification()
+    }
+
     override fun onDestroy() {
         webView?.destroy()
         super.onDestroy()
+    }
+
+    private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID, "Circuit Break", NotificationManager.IMPORTANCE_LOW
+            ).apply { description = "Persistent reminder" }
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+    }
+
+    private fun showNotification() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pending = PendingIntent.getActivity(
+            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Bored?")
+            .setContentText("Spin instead of snack")
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setOngoing(true)
+            .setContentIntent(pending)
+            .build()
+        getSystemService(NotificationManager::class.java).notify(NOTIFY_ID, notification)
+    }
+
+    private fun cancelNotification() {
+        getSystemService(NotificationManager::class.java).cancel(NOTIFY_ID)
     }
 
     private fun pushItems() {
