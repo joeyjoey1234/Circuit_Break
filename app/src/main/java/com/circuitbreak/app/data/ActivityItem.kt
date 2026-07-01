@@ -5,7 +5,8 @@ data class ActivityItem(
     val b: String,
     val d: String,
     val cat: String,
-    val type: String
+    val type: String,
+    val dur: String = "long"
 ) {
     fun uid() = "$type::$a"
 }

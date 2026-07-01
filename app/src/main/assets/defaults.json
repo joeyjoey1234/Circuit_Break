@@ -4,181 +4,211 @@
       "a": "Push-ups x10",
       "b": "Band pull-aparts x15",
       "d": "chest > rear delts",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Chair dips x12",
       "b": "Band face pulls x15",
       "d": "triceps > rotator cuff",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Burpees x8",
       "b": "Dead hang 30 sec",
       "d": "full send > back decompress",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Shadowbox 45 sec",
       "b": "Band face pulls x15",
       "d": "punches > shoulder health",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Tempo push-ups x5 (5s down)",
       "b": "Scap pull-ups x8",
       "d": "chest control > back activation",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Punching bag flurry 30 sec",
       "b": "Band pull-aparts x15",
       "d": "bag work > rear delts",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Air squats x15",
       "b": "",
       "d": "legs",
-      "cat": "legs"
+      "cat": "legs",
+      "dur": "short"
     },
     {
       "a": "Goblet squat x8",
       "b": "",
       "d": "legs (hold a plate)",
-      "cat": "legs"
+      "cat": "legs",
+      "dur": "long"
     },
     {
       "a": "Lunges x10 (5/side)",
       "b": "",
       "d": "legs + balance",
-      "cat": "legs"
+      "cat": "legs",
+      "dur": "long"
     },
     {
       "a": "Back extensions x12",
       "b": "",
       "d": "posterior chain",
-      "cat": "posterior"
+      "cat": "posterior",
+      "dur": "long"
     },
     {
       "a": "Bear crawl 30 ft + back",
       "b": "",
       "d": "full body + coordination",
-      "cat": "fullbody"
+      "cat": "fullbody",
+      "dur": "long"
     },
     {
       "a": "Barbell row x8",
       "b": "from rack - real pull",
       "d": "back strength",
-      "cat": "pull"
+      "cat": "pull",
+      "dur": "long"
     },
     {
       "a": "Farmers carry 30 sec",
       "b": "",
       "d": "grip + core (carry bag)",
-      "cat": "fullbody"
+      "cat": "fullbody",
+      "dur": "long"
     },
     {
       "a": "Weight vest stair laps 45 sec",
       "b": "",
       "d": "loaded cardio (vest)",
-      "cat": "fullbody"
+      "cat": "fullbody",
+      "dur": "long"
     },
     {
       "a": "Heavy bag body shots 30 sec",
       "b": "hooks to body, liver shots",
       "d": "bag work - low joint impact",
-      "cat": "fullbody"
+      "cat": "fullbody",
+      "dur": "long"
     },
     {
       "a": "Band pull-aparts x20",
       "b": "",
       "d": "posture / rear delts",
-      "cat": "pull"
+      "cat": "pull",
+      "dur": "short"
     },
     {
       "a": "Scap pull-up + knee raise x5",
       "b": "pull-up bar - control both ends",
       "d": "back + core combo",
-      "cat": "pull"
+      "cat": "pull",
+      "dur": "long"
     },
     {
       "a": "High knees 30 sec",
       "b": "",
       "d": "cardio spike",
-      "cat": "cardio"
+      "cat": "cardio",
+      "dur": "short"
     },
     {
       "a": "Mountain climbers x20",
       "b": "",
       "d": "core + cardio",
-      "cat": "core"
+      "cat": "core",
+      "dur": "short"
     },
     {
       "a": "Quick feet drill 30 sec",
       "b": "fast feet in place",
       "d": "foot speed + cardio",
-      "cat": "cardio"
+      "cat": "cardio",
+      "dur": "short"
     },
     {
       "a": "Plate halo x8/side",
       "b": "circle plate around head - shoulder mobility",
       "d": "mobility + novelty",
-      "cat": "mobility"
+      "cat": "mobility",
+      "dur": "long"
     },
     {
       "a": "Single-leg RDL x5/side",
       "b": "no load - balance + posterior chain",
       "d": "skill progression: wall > freestanding > eyes closed",
-      "cat": "posterior"
+      "cat": "posterior",
+      "dur": "long"
     },
     {
       "a": "L-sit tuck hold 15 sec",
       "b": "dip bars or two chairs - total body tension",
       "d": "skill: tuck > one-leg > full L-sit",
-      "cat": "core"
+      "cat": "core",
+      "dur": "long"
     },
     {
       "a": "Plate chest pass x10 + band pull-aparts x15",
       "b": "throw plate at wall, catch rebound - explosive + posture",
       "d": "push+pull pair",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Band-resisted push-up x8 + band face pulls x15",
       "b": "band across back - novel resistance curve",
       "d": "push+pull pair",
-      "cat": "push+pull"
+      "cat": "push+pull",
+      "dur": "long"
     },
     {
       "a": "Jumping swap lunges x10",
       "b": "swap mid-air - rhythm + cardio",
       "d": "legs + coordination",
-      "cat": "legs"
+      "cat": "legs",
+      "dur": "long"
     },
     {
       "a": "Trap bar shrug x10",
       "b": "quick, no setup - grip + traps",
       "d": "power + pull",
-      "cat": "pull"
+      "cat": "pull",
+      "dur": "short"
     },
     {
       "a": "Cold water face splash 30 sec",
       "b": "sink - dive reflex > instant norepinephrine spike",
       "d": "craving killer",
-      "cat": "reset"
+      "cat": "reset",
+      "dur": "short"
     },
     {
       "a": "Practice punches 30 sec",
       "b": "shadowbox or bag - focus on form",
       "d": "striking technique",
-      "cat": "skill"
+      "cat": "skill",
+      "dur": "short"
     },
     {
       "a": "Practice kicks 30 sec",
       "b": "roundhouse or teep - both sides",
       "d": "striking technique",
-      "cat": "skill"
+      "cat": "skill",
+      "dur": "short"
     }
   ],
   "cognitive": [
@@ -186,187 +216,218 @@
       "a": "Sudoku puzzle",
       "b": "sudoku.com - do 1 puzzle",
       "d": "3 min . logic + speed",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "long"
     },
     {
       "a": "Memorize 1 line of poetry",
       "b": "poetryfoundation.org - read, then recall",
       "d": "3 min . memory + culture",
-      "cat": "memory"
+      "cat": "memory",
+      "dur": "long"
     },
     {
       "a": "Speed math vs high score",
       "b": "arithmetic.zetamac.com - beat your last score",
       "d": "2 min . logic + competition",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "short"
     },
     {
       "a": "Rap 4 bars to a beat",
       "b": "YouTube 'type beat' + random word generator",
       "d": "4 min . rhythm + vocab + flow",
-      "cat": "creative"
+      "cat": "creative",
+      "dur": "long"
     },
     {
       "a": "Read 1 paragraph + recall test",
       "b": "grab any book - read 1 para, look away, recall key points",
       "d": "3 min . active reading + memory",
-      "cat": "memory"
+      "cat": "memory",
+      "dur": "long"
     },
     {
       "a": "20 mental math problems",
       "b": "arithmetic.zetamac.com - add/sub/mult",
       "d": "2 min . speed + logic",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "short"
     },
     {
       "a": "Typing speed test",
       "b": "monkeytype.com - 30 words",
       "d": "1 min . speed + WPM tracking",
-      "cat": "speed"
+      "cat": "speed",
+      "dur": "short"
     },
     {
       "a": "Name 10 things in a category",
       "b": "e.g. countries, bands, films - set a timer",
       "d": "2 min . speed retrieval",
-      "cat": "speed"
+      "cat": "speed",
+      "dur": "short"
     },
     {
       "a": "Duolingo 1 lesson",
       "b": "duolingo.com or app - any language",
       "d": "3 min . vocab + streak",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "long"
     },
     {
       "a": "Learn 3 new words + definitions",
       "b": "vocabulary.com - random words, then sentence each",
       "d": "3 min . vocab depth",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "long"
     },
     {
       "a": "Freestyle rap 30 sec",
       "b": "random word as prompt - just go, no stopping",
       "d": "2 min . flow + creativity",
-      "cat": "creative"
+      "cat": "creative",
+      "dur": "short"
     },
     {
       "a": "Anagram speed round",
       "b": "wordplays.com/anagrams - unscramble 5 words vs timer",
       "d": "3 min . word retrieval + speed",
-      "cat": "speed"
+      "cat": "speed",
+      "dur": "long"
     },
     {
       "a": "Listen to 1 verse + rap it back",
       "b": "play any rap song - pause after 1 verse, match cadence",
       "d": "4 min . ear training for rap",
-      "cat": "creative"
+      "cat": "creative",
+      "dur": "long"
     },
     {
       "a": "Learn 1 logical fallacy + spot it today",
       "b": "yourlogicalfallacyis.com - learn 1, watch for it all day",
       "d": "2 min . critical thinking",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "short"
     },
     {
       "a": "Dual n-back",
       "b": "dualn-back.com or app - working memory training",
       "d": "3 min . skill: aim for higher N-level",
-      "cat": "memory"
+      "cat": "memory",
+      "dur": "long"
     },
     {
       "a": "Memorize 3 digits of pi",
       "b": "pi.delivery - add 3 digits/day, recall full sequence",
       "d": "2 min . memory progression: 3 > 6 > 12+ digits",
-      "cat": "memory"
+      "cat": "memory",
+      "dur": "short"
     },
     {
       "a": "Mental rotation puzzle",
       "b": "mentalrotation.com - rotate 3D shapes vs timer",
       "d": "2 min . spatial reasoning",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "short"
     },
     {
       "a": "Reverse dictionary",
       "b": "reversedictionary.org - find the word for a definition",
       "d": "2 min . word retrieval under pressure",
-      "cat": "speed"
+      "cat": "speed",
+      "dur": "short"
     },
     {
       "a": "Learn 1 IPA symbol + pronounce",
       "b": "topHonetics.com - type word > see IPA > say it",
       "d": "2 min . phonetics skill",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "short"
     },
     {
       "a": "Mental math fractions",
       "b": "arithmetic.zetamac.com - set to fractions/percentages",
       "d": "2 min . harder arithmetic",
-      "cat": "logic"
+      "cat": "logic",
+      "dur": "short"
     },
     {
       "a": "Wim Hof breathing 1 round",
       "b": "YouTube 'Wim Hof guided 3 min' - 30 breaths + hold",
       "d": "3 min . altered state + focus",
-      "cat": "reset"
+      "cat": "reset",
+      "dur": "long"
     },
     {
       "a": "Read 1 RSS article",
       "b": "open RSS reader - read 1 full article",
       "d": "2 min . stay informed",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "short"
     },
     {
       "a": "Research transmission",
       "b": "look up 1 thing about transmissions - bookmark it",
       "d": "3 min . car knowledge",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "long"
     },
     {
       "a": "Research engine",
       "b": "look up 1 thing about engines - bookmark it",
       "d": "3 min . car knowledge",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "long"
     },
     {
       "a": "Spanish: 5 flashcards",
       "b": "Anki or app - review 5 cards",
       "d": "2 min . maintain vocab",
-      "cat": "learning"
+      "cat": "learning",
+      "dur": "short"
     },
     {
       "a": "Corvette: 1 small task",
       "b": "research, order part, or inspect 1 thing",
       "d": "5 min . project progress",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     },
     {
       "a": "Firebird: 1 small task",
       "b": "research, order part, or inspect 1 thing",
       "d": "5 min . project progress",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     },
     {
       "a": "Clean office: 5 min",
       "b": "tidy desk, file papers, wipe surfaces",
       "d": "5 min . environment",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     },
     {
       "a": "House improvement: 1 small task",
       "b": "fix, measure, plan, or research 1 thing",
       "d": "5 min . project progress",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     },
     {
       "a": "Clean 1 thing in house",
       "b": "pick 1 surface, shelf, or corner - make it spotless",
       "d": "3 min . environment",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     },
     {
       "a": "Steam sauna: 1 small task",
       "b": "research, order part, or work on sauna 5 min",
       "d": "5 min . project progress",
-      "cat": "project"
+      "cat": "project",
+      "dur": "long"
     }
   ]
 }

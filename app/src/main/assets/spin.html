@@ -79,6 +79,20 @@
   }
   .mode-btn .emoji { font-size: 18px; display: block; margin-bottom: 1px; }
 
+  /* Duration sub-selector */
+  .duration-row {
+    display: flex; gap: 6px; margin-top: -12px;
+  }
+  .dur-btn {
+    flex: 1; padding: 6px; border-radius: 8px;
+    border: 1px solid #2a2a2a; background: #141414;
+    color: #666; font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .dur-btn.active {
+    background: #1a1a2e; border-color: #4a4aff; color: #4a4aff;
+  }
+
   /* Card */
   .card-container {
     position: relative;
@@ -355,6 +369,12 @@
     </button>
   </div>
 
+  <div class="duration-row" id="durationRow">
+    <button class="dur-btn active" data-dur="any">any</button>
+    <button class="dur-btn" data-dur="short">⚡ short</button>
+    <button class="dur-btn" data-dur="long">🔋 long</button>
+  </div>
+
   <div class="card-container">
     <div class="card" id="card">
       <span class="idle-text" id="idleText">spacebar or tap ↓</span>
@@ -419,73 +439,73 @@
 // ── DATA ──────────────────────────────────────────
 // Physical: push exercises are PAIRED with a pull. Neutral/leg/core stand alone.
 let PHYSICAL = [
-  { a: "Push-ups x10", b: "Band pull-aparts x15", d: "chest > rear delts", cat: "push+pull" },
-  { a: "Chair dips x12", b: "Band face pulls x15", d: "triceps > rotator cuff", cat: "push+pull" },
-  { a: "Burpees x8", b: "Dead hang 30 sec", d: "full send > back decompress", cat: "push+pull" },
-  { a: "Shadowbox 45 sec", b: "Band face pulls x15", d: "punches > shoulder health", cat: "push+pull" },
-  { a: "Tempo push-ups x5 (5s down)", b: "Scap pull-ups x8", d: "chest control > back activation", cat: "push+pull" },
-  { a: "Punching bag flurry 30 sec", b: "Band pull-aparts x15", d: "bag work > rear delts", cat: "push+pull" },
+  { a: "Push-ups x10", b: "Band pull-aparts x15", d: "chest > rear delts", cat: "push+pull", dur: "long" },
+  { a: "Chair dips x12", b: "Band face pulls x15", d: "triceps > rotator cuff", cat: "push+pull", dur: "long" },
+  { a: "Burpees x8", b: "Dead hang 30 sec", d: "full send > back decompress", cat: "push+pull", dur: "long" },
+  { a: "Shadowbox 45 sec", b: "Band face pulls x15", d: "punches > shoulder health", cat: "push+pull", dur: "long" },
+  { a: "Tempo push-ups x5 (5s down)", b: "Scap pull-ups x8", d: "chest control > back activation", cat: "push+pull", dur: "long" },
+  { a: "Punching bag flurry 30 sec", b: "Band pull-aparts x15", d: "bag work > rear delts", cat: "push+pull", dur: "long" },
   // standalone / neutral
-  { a: "Air squats x15", b: "", d: "legs", cat: "legs" },
-  { a: "Goblet squat x8", b: "", d: "legs (hold a plate)", cat: "legs" },
-  { a: "Lunges x10 (5/side)", b: "", d: "legs + balance", cat: "legs" },
-  { a: "Back extensions x12", b: "", d: "posterior chain", cat: "posterior" },
-  { a: "Bear crawl 30 ft + back", b: "", d: "full body + coordination", cat: "fullbody" },
-  { a: "Barbell row x8", b: "from rack - real pull", d: "back strength", cat: "pull" },
-  { a: "Farmers carry 30 sec", b: "", d: "grip + core (carry bag)", cat: "fullbody" },
-  { a: "Weight vest stair laps 45 sec", b: "", d: "loaded cardio (vest)", cat: "fullbody" },
-  { a: "Heavy bag body shots 30 sec", b: "hooks to body, liver shots", d: "bag work - low joint impact", cat: "fullbody" },
-  { a: "Band pull-aparts x20", b: "", d: "posture / rear delts", cat: "pull" },
-  { a: "Scap pull-up + knee raise x5", b: "pull-up bar - control both ends", d: "back + core combo", cat: "pull" },
-  { a: "High knees 30 sec", b: "", d: "cardio spike", cat: "cardio" },
-  { a: "Mountain climbers x20", b: "", d: "core + cardio", cat: "core" },
-  { a: "Quick feet drill 30 sec", b: "fast feet in place", d: "foot speed + cardio", cat: "cardio" },
+  { a: "Air squats x15", b: "", d: "legs", cat: "legs", dur: "long" },
+  { a: "Goblet squat x8", b: "", d: "legs (hold a plate)", cat: "legs", dur: "long" },
+  { a: "Lunges x10 (5/side)", b: "", d: "legs + balance", cat: "legs", dur: "long" },
+  { a: "Back extensions x12", b: "", d: "posterior chain", cat: "posterior", dur: "long" },
+  { a: "Bear crawl 30 ft + back", b: "", d: "full body + coordination", cat: "fullbody", dur: "long" },
+  { a: "Barbell row x8", b: "from rack - real pull", d: "back strength", cat: "pull", dur: "long" },
+  { a: "Farmers carry 30 sec", b: "", d: "grip + core (carry bag)", cat: "fullbody", dur: "long" },
+  { a: "Weight vest stair laps 45 sec", b: "", d: "loaded cardio (vest)", cat: "fullbody", dur: "long" },
+  { a: "Heavy bag body shots 30 sec", b: "hooks to body, liver shots", d: "bag work - low joint impact", cat: "fullbody", dur: "long" },
+  { a: "Band pull-aparts x20", b: "", d: "posture / rear delts", cat: "pull", dur: "long" },
+  { a: "Scap pull-up + knee raise x5", b: "pull-up bar - control both ends", d: "back + core combo", cat: "pull", dur: "long" },
+  { a: "High knees 30 sec", b: "", d: "cardio spike", cat: "cardio", dur: "long" },
+  { a: "Mountain climbers x20", b: "", d: "core + cardio", cat: "core", dur: "long" },
+  { a: "Quick feet drill 30 sec", b: "fast feet in place", d: "foot speed + cardio", cat: "cardio", dur: "long" },
   // ── new additions ──
-  { a: "Plate halo x8/side", b: "circle plate around head - shoulder mobility", d: "mobility + novelty", cat: "mobility" },
-  { a: "Single-leg RDL x5/side", b: "no load - balance + posterior chain", d: "skill progression: wall > freestanding > eyes closed", cat: "posterior" },
-  { a: "L-sit tuck hold 15 sec", b: "dip bars or two chairs - total body tension", d: "skill: tuck > one-leg > full L-sit", cat: "core" },
-  { a: "Plate chest pass x10 + band pull-aparts x15", b: "throw plate at wall, catch rebound - explosive + posture", d: "push+pull pair", cat: "push+pull" },
-  { a: "Band-resisted push-up x8 + band face pulls x15", b: "band across back - novel resistance curve", d: "push+pull pair", cat: "push+pull" },
-  { a: "Jumping swap lunges x10", b: "swap mid-air - rhythm + cardio", d: "legs + coordination", cat: "legs" },
-  { a: "Trap bar shrug x10", b: "quick, no setup - grip + traps", d: "power + pull", cat: "pull" },
-  { a: "Cold water face splash 30 sec", b: "sink - dive reflex > instant norepinephrine spike", d: "craving killer", cat: "reset" },
-  { a: "Shadowbox to metronome 60 sec", b: "set metronome app to 80-120 bpm - punch on the beat", d: "rhythm + coordination + cardio", cat: "fullbody" },
-  { a: "Practice punches 30 sec", b: "shadowbox or bag - focus on form", d: "striking technique", cat: "skill" },
-  { a: "Practice kicks 30 sec", b: "roundhouse or teep - both sides", d: "striking technique", cat: "skill" },
+  { a: "Plate halo x8/side", b: "circle plate around head - shoulder mobility", d: "mobility + novelty", cat: "mobility", dur: "long" },
+  { a: "Single-leg RDL x5/side", b: "no load - balance + posterior chain", d: "skill progression: wall > freestanding > eyes closed", cat: "posterior", dur: "long" },
+  { a: "L-sit tuck hold 15 sec", b: "dip bars or two chairs - total body tension", d: "skill: tuck > one-leg > full L-sit", cat: "core", dur: "long" },
+  { a: "Plate chest pass x10 + band pull-aparts x15", b: "throw plate at wall, catch rebound - explosive + posture", d: "push+pull pair", cat: "push+pull", dur: "long" },
+  { a: "Band-resisted push-up x8 + band face pulls x15", b: "band across back - novel resistance curve", d: "push+pull pair", cat: "push+pull", dur: "long" },
+  { a: "Jumping swap lunges x10", b: "swap mid-air - rhythm + cardio", d: "legs + coordination", cat: "legs", dur: "long" },
+  { a: "Trap bar shrug x10", b: "quick, no setup - grip + traps", d: "power + pull", cat: "pull", dur: "long" },
+  { a: "Cold water face splash 30 sec", b: "sink - dive reflex > instant norepinephrine spike", d: "craving killer", cat: "reset", dur: "long" },
+  { a: "Shadowbox to metronome 60 sec", b: "set metronome app to 80-120 bpm - punch on the beat", d: "rhythm + coordination + cardio", cat: "fullbody", dur: "long" },
+  { a: "Practice punches 30 sec", b: "shadowbox or bag - focus on form", d: "striking technique", cat: "skill", dur: "long" },
+  { a: "Practice kicks 30 sec", b: "roundhouse or teep - both sides", d: "striking technique", cat: "skill", dur: "long" },
 ];
 
 let COGNITIVE = [
-  { a: "Sudoku puzzle", b: "sudoku.com - do 1 puzzle", d: "3 min . logic + speed", cat: "logic" },
-  { a: "Memorize 1 line of poetry", b: "poetryfoundation.org - read, then recall", d: "3 min . memory + culture", cat: "memory" },
-  { a: "Speed math vs high score", b: "arithmetic.zetamac.com - beat your last score", d: "2 min . logic + competition", cat: "logic" },
-  { a: "Rap 4 bars to a beat", b: "YouTube 'type beat' + random word generator", d: "4 min . rhythm + vocab + flow", cat: "creative" },
-  { a: "Read 1 paragraph + recall test", b: "grab any book - read 1 para, look away, recall key points", d: "3 min . active reading + memory", cat: "memory" },
-  { a: "20 mental math problems", b: "arithmetic.zetamac.com - add/sub/mult", d: "2 min . speed + logic", cat: "logic" },
-  { a: "Typing speed test", b: "monkeytype.com - 30 words", d: "1 min . speed + WPM tracking", cat: "speed" },
-  { a: "Name 10 things in a category", b: "e.g. countries, bands, films - set a timer", d: "2 min . speed retrieval", cat: "speed" },
-  { a: "Duolingo 1 lesson", b: "duolingo.com or app - any language", d: "3 min . vocab + streak", cat: "learning" },
-  { a: "Learn 3 new words + definitions", b: "vocabulary.com - random words, then sentence each", d: "3 min . vocab depth", cat: "learning" },
-  { a: "Freestyle rap 30 sec", b: "random word as prompt - just go, no stopping", d: "2 min . flow + creativity", cat: "creative" },
-  { a: "Anagram speed round", b: "wordplays.com/anagrams - unscramble 5 words vs timer", d: "3 min . word retrieval + speed", cat: "speed" },
-  { a: "Listen to 1 verse + rap it back", b: "play any rap song - pause after 1 verse, match cadence", d: "4 min . ear training for rap", cat: "creative" },
-  { a: "Learn 1 logical fallacy + spot it today", b: "yourlogicalfallacyis.com - learn 1, watch for it all day", d: "2 min . critical thinking", cat: "logic" },
-  { a: "Dual n-back", b: "dualn-back.com or app - working memory training", d: "3 min . skill: aim for higher N-level", cat: "memory" },
-  { a: "Memorize 3 digits of pi", b: "pi.delivery - add 3 digits/day, recall full sequence", d: "2 min . memory progression: 3 > 6 > 12+ digits", cat: "memory" },
-  { a: "Mental rotation puzzle", b: "mentalrotation.com - rotate 3D shapes vs timer", d: "2 min . spatial reasoning", cat: "logic" },
-  { a: "Reverse dictionary", b: "reversedictionary.org - find the word for a definition", d: "2 min . word retrieval under pressure", cat: "speed" },
-  { a: "Learn 1 IPA symbol + pronounce", b: "topHonetics.com - type word > see IPA > say it", d: "2 min . phonetics skill", cat: "learning" },
-  { a: "Mental math fractions", b: "arithmetic.zetamac.com - set to fractions/percentages", d: "2 min . harder arithmetic", cat: "logic" },
-  { a: "Wim Hof breathing 1 round", b: "YouTube 'Wim Hof guided 3 min' - 30 breaths + hold", d: "3 min . altered state + focus", cat: "reset" },
-  { a: "Read 1 RSS article", b: "open RSS reader - read 1 full article", d: "2 min . stay informed", cat: "learning" },
-  { a: "Research transmission", b: "look up 1 thing about transmissions - bookmark it", d: "3 min . car knowledge", cat: "learning" },
-  { a: "Research engine", b: "look up 1 thing about engines - bookmark it", d: "3 min . car knowledge", cat: "learning" },
-  { a: "Spanish: 5 flashcards", b: "Anki or app - review 5 cards", d: "2 min . maintain vocab", cat: "learning" },
-  { a: "Corvette: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project" },
-  { a: "Firebird: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project" },
-  { a: "Clean office: 5 min", b: "tidy desk, file papers, wipe surfaces", d: "5 min . environment", cat: "project" },
-  { a: "House improvement: 1 small task", b: "fix, measure, plan, or research 1 thing", d: "5 min . project progress", cat: "project" },
-  { a: "Clean 1 thing in house", b: "pick 1 surface, shelf, or corner - make it spotless", d: "3 min . environment", cat: "project" },
-  { a: "Steam sauna: 1 small task", b: "research, order part, or work on sauna 5 min", d: "5 min . project progress", cat: "project" },
+  { a: "Sudoku puzzle", b: "sudoku.com - do 1 puzzle", d: "3 min . logic + speed", cat: "logic", dur: "long" },
+  { a: "Memorize 1 line of poetry", b: "poetryfoundation.org - read, then recall", d: "3 min . memory + culture", cat: "memory", dur: "long" },
+  { a: "Speed math vs high score", b: "arithmetic.zetamac.com - beat your last score", d: "2 min . logic + competition", cat: "logic", dur: "long" },
+  { a: "Rap 4 bars to a beat", b: "YouTube 'type beat' + random word generator", d: "4 min . rhythm + vocab + flow", cat: "creative", dur: "long" },
+  { a: "Read 1 paragraph + recall test", b: "grab any book - read 1 para, look away, recall key points", d: "3 min . active reading + memory", cat: "memory", dur: "long" },
+  { a: "20 mental math problems", b: "arithmetic.zetamac.com - add/sub/mult", d: "2 min . speed + logic", cat: "logic", dur: "long" },
+  { a: "Typing speed test", b: "monkeytype.com - 30 words", d: "1 min . speed + WPM tracking", cat: "speed", dur: "long" },
+  { a: "Name 10 things in a category", b: "e.g. countries, bands, films - set a timer", d: "2 min . speed retrieval", cat: "speed", dur: "long" },
+  { a: "Duolingo 1 lesson", b: "duolingo.com or app - any language", d: "3 min . vocab + streak", cat: "learning", dur: "long" },
+  { a: "Learn 3 new words + definitions", b: "vocabulary.com - random words, then sentence each", d: "3 min . vocab depth", cat: "learning", dur: "long" },
+  { a: "Freestyle rap 30 sec", b: "random word as prompt - just go, no stopping", d: "2 min . flow + creativity", cat: "creative", dur: "long" },
+  { a: "Anagram speed round", b: "wordplays.com/anagrams - unscramble 5 words vs timer", d: "3 min . word retrieval + speed", cat: "speed", dur: "long" },
+  { a: "Listen to 1 verse + rap it back", b: "play any rap song - pause after 1 verse, match cadence", d: "4 min . ear training for rap", cat: "creative", dur: "long" },
+  { a: "Learn 1 logical fallacy + spot it today", b: "yourlogicalfallacyis.com - learn 1, watch for it all day", d: "2 min . critical thinking", cat: "logic", dur: "long" },
+  { a: "Dual n-back", b: "dualn-back.com or app - working memory training", d: "3 min . skill: aim for higher N-level", cat: "memory", dur: "long" },
+  { a: "Memorize 3 digits of pi", b: "pi.delivery - add 3 digits/day, recall full sequence", d: "2 min . memory progression: 3 > 6 > 12+ digits", cat: "memory", dur: "long" },
+  { a: "Mental rotation puzzle", b: "mentalrotation.com - rotate 3D shapes vs timer", d: "2 min . spatial reasoning", cat: "logic", dur: "long" },
+  { a: "Reverse dictionary", b: "reversedictionary.org - find the word for a definition", d: "2 min . word retrieval under pressure", cat: "speed", dur: "long" },
+  { a: "Learn 1 IPA symbol + pronounce", b: "topHonetics.com - type word > see IPA > say it", d: "2 min . phonetics skill", cat: "learning", dur: "long" },
+  { a: "Mental math fractions", b: "arithmetic.zetamac.com - set to fractions/percentages", d: "2 min . harder arithmetic", cat: "logic", dur: "long" },
+  { a: "Wim Hof breathing 1 round", b: "YouTube 'Wim Hof guided 3 min' - 30 breaths + hold", d: "3 min . altered state + focus", cat: "reset", dur: "long" },
+  { a: "Read 1 RSS article", b: "open RSS reader - read 1 full article", d: "2 min . stay informed", cat: "learning", dur: "long" },
+  { a: "Research transmission", b: "look up 1 thing about transmissions - bookmark it", d: "3 min . car knowledge", cat: "learning", dur: "long" },
+  { a: "Research engine", b: "look up 1 thing about engines - bookmark it", d: "3 min . car knowledge", cat: "learning", dur: "long" },
+  { a: "Spanish: 5 flashcards", b: "Anki or app - review 5 cards", d: "2 min . maintain vocab", cat: "learning", dur: "long" },
+  { a: "Corvette: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project", dur: "long" },
+  { a: "Firebird: 1 small task", b: "research, order part, or inspect 1 thing", d: "5 min . project progress", cat: "project", dur: "long" },
+  { a: "Clean office: 5 min", b: "tidy desk, file papers, wipe surfaces", d: "5 min . environment", cat: "project", dur: "long" },
+  { a: "House improvement: 1 small task", b: "fix, measure, plan, or research 1 thing", d: "5 min . project progress", cat: "project", dur: "long" },
+  { a: "Clean 1 thing in house", b: "pick 1 surface, shelf, or corner - make it spotless", d: "3 min . environment", cat: "project", dur: "long" },
+  { a: "Steam sauna: 1 small task", b: "research, order part, or work on sauna 5 min", d: "5 min . project progress", cat: "project", dur: "long" },
 ];
 
 // ── STORAGE ───────────────────────────────────────
@@ -524,17 +544,17 @@ function saveState(state) {
 
 let state = loadState();
 let mode = "any";
+let durMode = "any";
 let spinning = false;
 // ── SHUFFLE DECKS ─────────────────────────────────
-let deckP = [];
-let deckC = [];
-let pi = 0, ci = 0;
+let physIdx = { i: 0 };
+let cogIdx = { i: 0 };
 
 function reshuffleDecks() {
-  deckP = [...PHYSICAL].sort(() => Math.random() - 0.5);
-  deckC = [...COGNITIVE].sort(() => Math.random() - 0.5);
-  pi = 0;
-  ci = 0;
+  PHYSICAL.sort(() => Math.random() - 0.5);
+  COGNITIVE.sort(() => Math.random() - 0.5);
+  physIdx.i = 0;
+  cogIdx.i = 0;
 }
 reshuffleDecks();
 
@@ -543,8 +563,8 @@ let soundEnabled = true;
 window.loadItems = function(json) {
   try {
     const data = JSON.parse(json);
-    if (data.physical) PHYSICAL = data.physical;
-    if (data.cognitive) COGNITIVE = data.cognitive;
+    if (data.physical) { PHYSICAL = data.physical; }
+    if (data.cognitive) { COGNITIVE = data.cognitive; }
     reshuffleDecks();
     resetCard();
   } catch(e) {}
@@ -562,36 +582,40 @@ document.getElementById("settingsBtn").addEventListener("click", () => {
 
 // ── PICK ACTIVITY ─────────────────────────────────
 function pickActivity() {
+  // filter pools by duration
+  const pPool = durMode === "any" ? PHYSICAL : PHYSICAL.filter(i => i.dur === durMode);
+  const cPoll = durMode === "any" ? COGNITIVE : COGNITIVE.filter(i => i.dur === durMode);
+
+  const pickFromPool = (pool, idxRef) => {
+    if (idxRef.i >= pool.length) { idxRef.i = 0; }
+    return { ...pool[idxRef.i++] };
+  };
+
   if (mode === "physical") {
-    if (pi >= deckP.length) { reshuffleDecks(); }
-    return { ...deckP[pi++], type: "physical" };
+    if (physIdx.i >= pPool.length) { physIdx.i = 0; }
+    return { ...pPool[physIdx.i++], type: "physical" };
   }
   if (mode === "cognitive") {
-    if (ci >= deckC.length) { reshuffleDecks(); }
-    return { ...deckC[ci++], type: "cognitive" };
+    if (cogIdx.i >= cPoll.length) { cogIdx.i = 0; }
+    return { ...cPoll[cogIdx.i++], type: "cognitive" };
   }
 
-  // "any" mode: alternate physical ⇄ cognitive, cycling through shuffled decks
+  // "any" mode: alternate
   const sessions = state.sessions;
   let type;
   if (sessions.length === 0) {
     type = Math.random() < 0.5 ? "physical" : "cognitive";
   } else {
     const lastType = sessions[sessions.length - 1].type;
-    const lastThree = sessions.slice(-3).map(s => s.type);
-    const allSame = lastThree.length === 3 && lastThree.every(t => t === lastType);
-    type = allSame ? (lastType === "physical" ? "cognitive" : "physical") : (lastType === "physical" ? "cognitive" : "physical");
+    type = lastType === "physical" ? "cognitive" : "physical";
   }
 
   if (type === "physical") {
-    if (pi >= deckP.length) { reshuffleDecks(); }
-    // physical > physical > physical guard: if we just came from cognitive, and next would be physical
-    // check the last two physical items. If both were push+pull, try to pick a non-push+pull from what's left
-    const item = deckP[pi++];
-    return { ...item, type: "physical" };
+    if (physIdx.i >= pPool.length) { physIdx.i = 0; }
+    return { ...pPool[physIdx.i++], type: "physical" };
   } else {
-    if (ci >= deckC.length) { reshuffleDecks(); }
-    return { ...deckC[ci++], type: "cognitive" };
+    if (cogIdx.i >= cPoll.length) { cogIdx.i = 0; }
+    return { ...cPoll[cogIdx.i++], type: "cognitive" };
   }
 }
 
@@ -800,6 +824,17 @@ document.querySelectorAll(".mode-btn").forEach(btn => {
     document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     mode = btn.dataset.mode;
+    // re-shuffle and reset indices when changing mode
+    reshuffleDecks();
+  });
+});
+
+document.querySelectorAll(".dur-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".dur-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    durMode = btn.dataset.dur;
+    reshuffleDecks();
   });
 });
 
