@@ -11,7 +11,6 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import android.app.AlertDialog
 import com.circuitbreak.app.data.ItemStore
 
 class MainActivity : ComponentActivity() {
@@ -33,7 +32,6 @@ class MainActivity : ComponentActivity() {
                     pageLoaded = true
                     pushItems()
                     pushSoundPref()
-                    checkForUpdate()
                 }
             }
             webChromeClient = WebChromeClient()
@@ -84,33 +82,6 @@ class MainActivity : ComponentActivity() {
             pushItems()
             pushSoundPref()
         }
-
-    private fun checkForUpdate() {
-        val currentVersion = try {
-            "v" + (packageManager.getPackageInfo(packageName, 0).versionName ?: "0")
-        } catch (e: Exception) {
-            return
-        }
-        UpdateChecker.check { release ->
-            if (release != null && UpdateChecker.isNewer(currentVersion, release.tagName)) {
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    try {
-                        AlertDialog.Builder(this@MainActivity)
-                            .setTitle("Update Available")
-                            .setMessage("${release.tagName} is available (current: $currentVersion).\nDownload and install?")
-                            .setPositiveButton("Download") { _, _ ->
-                                UpdateChecker.downloadAndInstall(this@MainActivity, release.downloadUrl, release.fileName)
-                            }
-                            .setNegativeButton("Later", null)
-                            .show()
-                    } catch (e: Exception) {
-                        Toast.makeText(this@MainActivity, "Update check failed", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-    }
 
     inner class CircuitBridge {
         @JavascriptInterface
